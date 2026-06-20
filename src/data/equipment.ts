@@ -151,7 +151,7 @@ export const equipment: EquipmentItem[] = [
     pricePerDay: 3000,
     minDays: 1,
     included: ['Power cable', 'MIDI footswitch', 'Footswitch'],
-    available: true,
+    available: false,
     featured: true,
     relatedAccessorySlugs: ['guitar-cable-pack', 'di-box'],
   },

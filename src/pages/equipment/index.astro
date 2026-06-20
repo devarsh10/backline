@@ -2,12 +2,17 @@
 import Layout from '../../layouts/Layout.astro';
 import EquipmentCard from '../../components/EquipmentCard.astro';
 import { equipment } from '../../data/equipment';
+
+const availableItems = equipment.filter(e => e.available);
 ---
 
 <Layout
   title="Equipment"
   description="Browse professional music gear for rent. Drums, guitars, amplifiers, keyboards, and accessories. Transparent pricing, no account needed."
 >
+  <!-- Embed full catalogue for client-side search -->
+  <script id="equipment-data" type="application/json" set:html={JSON.stringify(equipment)} />
+
   <div class="page-container">
     <div class="page-header">
       <div class="breadcrumb">
@@ -17,33 +22,424 @@ import { equipment } from '../../data/equipment';
       </div>
       <h1 class="display-lg page-title">Equipment</h1>
       <p class="page-sub">Browse our catalog. Add what you need to your cart and checkout.</p>
+
+      <!-- Search bar -->
+      <div class="search-wrap">
+        <div class="search-box" id="search-box">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            type="search"
+            id="search-input"
+            class="search-input"
+            placeholder="Search by name, brand, or type…"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button id="search-clear" class="search-clear" aria-label="Clear search" style="display:none;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      </div>
     </div>
 
-    <div class="equipment-grid">
-      {equipment.filter(e => e.available).map(item => (
+    <!-- Default view: available items -->
+    <div id="default-view" class="equipment-grid">
+      {availableItems.map(item => (
         <EquipmentCard item={item} />
       ))}
+    </div>
+
+    <!-- Search results view -->
+    <div id="search-results" style="display:none;">
+      <p id="results-meta" class="results-meta"></p>
+      <div id="results-grid" class="equipment-grid"></div>
+
+      <!-- Similar available options (shown when unavailable item matched) -->
+      <div id="similar-section" style="display:none;">
+        <div class="similar-header">
+          <span class="similar-title">Similar available options</span>
+          <span class="similar-rule"></span>
+        </div>
+        <div id="similar-grid" class="equipment-grid"></div>
+      </div>
+
+      <!-- No results -->
+      <div id="no-results" style="display:none;" class="no-results">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.25" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <p class="no-results-text">No results for "<span id="no-results-query"></span>"</p>
+        <a href="/contact" class="btn-secondary" style="font-size:13px; padding: 8px 16px;">Ask about availability</a>
+      </div>
     </div>
   </div>
 </Layout>
 
 <style>
   .page-container { max-width: 1280px; margin: 0 auto; padding: 0 24px 80px; }
-  .page-header { padding: 40px 0 32px; }
+  .page-header { padding: 40px 0 28px; }
   .breadcrumb { display: flex; align-items: center; gap: 6px; margin-bottom: 14px; }
   .breadcrumb-link { font-size: 13px; color: var(--color-mute); text-decoration: none; }
   .breadcrumb-link:hover { color: var(--color-body); }
   .breadcrumb-sep { font-size: 13px; color: var(--color-hairline-strong); }
   .breadcrumb-current { font-size: 13px; color: var(--color-body); }
   .page-title { margin: 0 0 8px; }
-  .page-sub { font-size: 15px; color: var(--color-body); margin: 0; }
+  .page-sub { font-size: 15px; color: var(--color-body); margin: 0 0 24px; }
 
+  /* Search */
+  .search-wrap { max-width: 480px; }
+  .search-box {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--color-canvas);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-md);
+    padding: 0 12px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .search-box:focus-within {
+    border-color: var(--color-ink);
+    box-shadow: 0 0 0 3px rgba(23,23,23,0.08);
+  }
+  .search-icon { color: var(--color-mute); flex-shrink: 0; }
+  .search-input {
+    flex: 1; border: none; outline: none; background: transparent;
+    font-size: 14px; color: var(--color-ink); font-family: var(--font-sans);
+    height: 42px; min-width: 0;
+  }
+  .search-input::placeholder { color: var(--color-mute); }
+  .search-input::-webkit-search-cancel-button { display: none; }
+  .search-clear {
+    background: none; border: none; cursor: pointer; padding: 4px;
+    color: var(--color-mute); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    transition: color 0.12s, background 0.12s;
+  }
+  .search-clear:hover { color: var(--color-ink); background: var(--color-canvas-soft-2); }
+
+  /* Grids */
   .equipment-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+
+  /* Results meta */
+  .results-meta { font-size: 13px; color: var(--color-mute); margin: 0 0 16px; }
+
+  /* Similar section */
+  .similar-header {
+    display: flex; align-items: center; gap: 16px;
+    margin: 48px 0 20px;
+  }
+  .similar-title {
+    font-size: 13px; font-weight: 600; color: var(--color-body);
+    text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .similar-rule { flex: 1; height: 1px; background: var(--color-hairline); }
+
+  /* No results */
+  .no-results {
+    padding: 64px 0; text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+  }
+  .no-results-text { font-size: 15px; color: var(--color-body); margin: 0; }
+
+  /* ── Global card styles for dynamically rendered search result cards ── */
+  :global(.gear-card) {
+    display: flex; flex-direction: column;
+    background-color: var(--color-canvas);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-hairline);
+    overflow: hidden;
+    transition: box-shadow 0.2s, border-color 0.2s;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  :global(.gear-card:hover) {
+    border-color: var(--color-hairline-strong);
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.06), 0 4px 16px -4px rgba(0,0,0,0.10);
+  }
+  :global(.gear-card-img-link) { display: block; }
+  :global(.gear-card-img) {
+    background-color: var(--color-canvas-soft-2);
+    aspect-ratio: 4/3;
+    display: flex; align-items: center; justify-content: center;
+    border-bottom: 1px solid var(--color-hairline);
+    overflow: hidden; position: relative;
+  }
+  :global(.gear-card-photo) { width: 100%; height: 100%; object-fit: cover; }
+  :global(.gear-card-img-placeholder) { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+  :global(.gear-featured-badge) {
+    position: absolute; top: 8px; left: 8px;
+    background-color: var(--color-ink); color: var(--color-on-primary);
+    font-size: 10px; font-weight: 500; padding: 2px 8px;
+    border-radius: var(--radius-full);
+  }
+  :global(.gear-card-body) {
+    padding: 14px; display: flex; flex-direction: column; flex: 1; gap: 4px;
+  }
+  :global(.gear-card-meta) {
+    display: flex; align-items: center; justify-content: space-between; gap: 6px;
+  }
+  :global(.gear-brand) { color: var(--color-mute); }
+  :global(.gear-sub) { font-size: 11px; color: var(--color-mute); text-align: right; }
+  :global(.gear-card-name-link) { text-decoration: none; color: inherit; }
+  :global(.gear-card-name) {
+    font-size: 14px; font-weight: 600; color: var(--color-ink);
+    letter-spacing: -0.02em; line-height: 1.3; margin: 2px 0 6px;
+  }
+  :global(.gear-card-footer) {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: auto; padding-top: 10px;
+    border-top: 1px solid var(--color-hairline); gap: 8px;
+  }
+  :global(.gear-price) { font-size: 15px; font-weight: 600; color: var(--color-ink); letter-spacing: -0.02em; }
+  :global(.gear-price-unit) { font-size: 12px; font-weight: 400; color: var(--color-mute); margin-left: 1px; }
+  :global(.add-to-cart-btn) {
+    display: inline-flex; align-items: center; justify-content: center;
+    background-color: var(--color-ink); color: var(--color-on-primary);
+    font-size: 12px; font-weight: 500; padding: 5px 12px;
+    border: none; border-radius: var(--radius-full);
+    cursor: pointer; white-space: nowrap;
+    transition: opacity 0.15s; flex-shrink: 0;
+  }
+  :global(.add-to-cart-btn:hover) { opacity: 0.85; }
+  :global(.add-to-cart-btn.added) { background-color: var(--color-accent-deep); }
+
+  /* Unavailable card */
+  :global(.gear-card--unavailable) { opacity: 0.6; }
+  :global(.gear-card--unavailable a),
+  :global(.gear-card--unavailable button) { pointer-events: none; }
+  :global(.unavail-badge) {
+    position: absolute; top: 8px; left: 8px;
+    background: #d4a017; color: #fff;
+    font-size: 10px; font-weight: 600; padding: 2px 8px;
+    border-radius: var(--radius-full); letter-spacing: 0.03em;
+  }
+  :global(.unavail-btn) {
+    display: inline-flex; align-items: center; justify-content: center;
+    background-color: transparent;
+    color: #d4a017; font-size: 11px; font-weight: 600;
+    padding: 5px 10px; border: 1px solid rgba(212,160,23,0.45);
+    border-radius: var(--radius-full); white-space: nowrap; flex-shrink: 0;
+    cursor: default; letter-spacing: 0.02em;
+  }
 
   @media (max-width: 1100px) { .equipment-grid { grid-template-columns: repeat(3, 1fr); } }
   @media (max-width: 768px) { .equipment-grid { grid-template-columns: repeat(2, 1fr); } }
   @media (max-width: 480px) {
     .page-container { padding: 0 16px 60px; }
     .equipment-grid { grid-template-columns: 1fr; }
+    .search-wrap { max-width: 100%; }
   }
 </style>
+
+<script>
+  import { addToCart, updateCartBadge } from '../../scripts/cart';
+
+  const allItems: any[] = JSON.parse(
+    document.getElementById('equipment-data')!.textContent!
+  );
+
+  const searchInput  = document.getElementById('search-input')  as HTMLInputElement;
+  const searchClear  = document.getElementById('search-clear')  as HTMLButtonElement;
+  const defaultView  = document.getElementById('default-view')!;
+  const searchResultsEl = document.getElementById('search-results')!;
+  const resultsMeta  = document.getElementById('results-meta')!;
+  const resultsGrid  = document.getElementById('results-grid')!;
+  const similarSection = document.getElementById('similar-section')!;
+  const similarGrid  = document.getElementById('similar-grid')!;
+  const noResults    = document.getElementById('no-results')!;
+
+  // ── Helpers ──────────────────────────────────────────────────────────
+
+  function esc(s: string) {
+    return String(s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function normalise(s: string) {
+    return s.toLowerCase().replace(/[^a-z0-9\s]/g, '');
+  }
+
+  function searchScore(item: any, query: string): number {
+    const q = normalise(query);
+    const words = q.split(/\s+/).filter(w => w.length > 1);
+    const fields = [
+      { text: normalise(item.name),        weight: 4 },
+      { text: normalise(item.brand),       weight: 3 },
+      { text: normalise(item.subcategory), weight: 2 },
+      { text: normalise(item.category),    weight: 1 },
+    ];
+    let score = 0;
+    // Full query match
+    fields.forEach(f => { if (f.text.includes(q)) score += f.weight * 2; });
+    // Individual word matches
+    words.forEach(word => {
+      fields.forEach(f => { if (f.text.includes(word)) score += f.weight; });
+    });
+    return score;
+  }
+
+  function similarityScore(target: any, candidate: any): number {
+    let s = 0;
+    if (candidate.subcategory === target.subcategory) s += 3;
+    if (candidate.category    === target.category)    s += 2;
+    if (candidate.brand       === target.brand)       s += 1;
+    const diff = Math.abs(candidate.pricePerDay - target.pricePerDay) / target.pricePerDay;
+    if (diff < 0.3) s += 1;
+    return s;
+  }
+
+  function getSimilar(unavailItem: any, excludeSlugs: Set<string>): any[] {
+    return allItems
+      .filter(i => i.available && i.slug !== unavailItem.slug && !excludeSlugs.has(i.slug))
+      .map(i => ({ item: i, score: similarityScore(unavailItem, i) }))
+      .filter(r => r.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3)
+      .map(r => r.item);
+  }
+
+  // ── Card renderer ─────────────────────────────────────────────────────
+
+  function renderCard(item: any, unavailable = false): string {
+    const price = `₹${item.pricePerDay.toLocaleString('en-IN')}`;
+    const imgContent = item.image
+      ? `<img src="${esc(item.image)}" alt="${esc(item.name)}" loading="lazy" class="gear-card-photo" />`
+      : `<div class="gear-card-img-placeholder" aria-hidden="true">
+           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.2">
+             <path d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/>
+           </svg>
+         </div>`;
+
+    const topBadge = unavailable
+      ? `<span class="unavail-badge">Unavailable</span>`
+      : item.featured ? `<span class="gear-featured-badge">Featured</span>` : '';
+
+    const action = unavailable
+      ? `<span class="unavail-btn">Currently rented</span>`
+      : `<button class="add-to-cart-btn"
+            data-slug="${esc(item.slug)}"
+            data-name="${esc(item.name)}"
+            data-brand="${esc(item.brand)}"
+            data-category="${esc(item.category)}"
+            data-price="${item.pricePerDay}"
+            aria-label="Add ${esc(item.name)} to cart">+ Add</button>`;
+
+    return `
+      <div class="gear-card${unavailable ? ' gear-card--unavailable' : ''}">
+        <a href="/equipment/${esc(item.category)}/${esc(item.slug)}" class="gear-card-img-link" tabindex="-1" aria-hidden="true">
+          <div class="gear-card-img">
+            ${imgContent}
+            ${topBadge}
+          </div>
+        </a>
+        <div class="gear-card-body">
+          <div class="gear-card-meta">
+            <span class="caption-mono gear-brand">${esc(item.brand)}</span>
+            <span class="gear-sub">${esc(item.subcategory)}</span>
+          </div>
+          <a href="/equipment/${esc(item.category)}/${esc(item.slug)}" class="gear-card-name-link">
+            <h3 class="gear-card-name">${esc(item.name)}</h3>
+          </a>
+          <div class="gear-card-footer">
+            <span class="gear-price">${price}<span class="gear-price-unit">/day</span></span>
+            ${action}
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // ── Add-to-cart delegation for dynamically rendered cards ─────────────
+
+  function handleCartClick(e: Event) {
+    const btn = (e.target as Element).closest<HTMLButtonElement>('.add-to-cart-btn');
+    if (!btn) return;
+    addToCart({
+      slug:        btn.dataset.slug!,
+      name:        btn.dataset.name!,
+      brand:       btn.dataset.brand!,
+      category:    btn.dataset.category!,
+      pricePerDay: Number(btn.dataset.price),
+    });
+    btn.textContent = '✓ Added';
+    btn.classList.add('added');
+    setTimeout(() => { btn.textContent = '+ Add'; btn.classList.remove('added'); }, 1400);
+    updateCartBadge();
+  }
+
+  resultsGrid.addEventListener('click', handleCartClick);
+  similarGrid.addEventListener('click', handleCartClick);
+
+  // ── Search logic ──────────────────────────────────────────────────────
+
+  function showDefault() {
+    defaultView.style.display = 'grid';
+    searchResultsEl.style.display = 'none';
+    searchClear.style.display = 'none';
+  }
+
+  function runSearch(query: string) {
+    if (!query.trim()) { showDefault(); return; }
+
+    searchClear.style.display = 'flex';
+    defaultView.style.display = 'none';
+    searchResultsEl.style.display = 'block';
+
+    const matches = allItems
+      .map(item => ({ item, score: searchScore(item, query) }))
+      .filter(r => r.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .map(r => r.item);
+
+    if (matches.length === 0) {
+      resultsMeta.textContent = '';
+      resultsGrid.innerHTML = '';
+      similarSection.style.display = 'none';
+      noResults.style.display = 'flex';
+      (document.getElementById('no-results-query') as HTMLElement).textContent = query;
+      return;
+    }
+
+    noResults.style.display = 'none';
+    resultsMeta.textContent = `${matches.length} result${matches.length !== 1 ? 's' : ''} for "${query}"`;
+    resultsGrid.innerHTML = matches.map(item => renderCard(item, !item.available)).join('');
+
+    // Similar section for unavailable matches
+    const unavailMatches = matches.filter(i => !i.available);
+    if (unavailMatches.length > 0) {
+      const matchedSlugs = new Set(matches.map((i: any) => i.slug));
+      const seen = new Set<string>();
+      const similar: any[] = [];
+      unavailMatches.forEach(item => {
+        getSimilar(item, matchedSlugs).forEach(s => {
+          if (!seen.has(s.slug)) { seen.add(s.slug); similar.push(s); }
+        });
+      });
+      if (similar.length > 0) {
+        similarSection.style.display = 'block';
+        similarGrid.innerHTML = similar.map(item => renderCard(item, false)).join('');
+      } else {
+        similarSection.style.display = 'none';
+      }
+    } else {
+      similarSection.style.display = 'none';
+    }
+  }
+
+  // ── Event listeners ───────────────────────────────────────────────────
+
+  let debounceTimer: ReturnType<typeof setTimeout>;
+  searchInput.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => runSearch(searchInput.value), 180);
+  });
+
+  searchClear.addEventListener('click', () => {
+    searchInput.value = '';
+    searchInput.focus();
+    showDefault();
+  });
+</script>
