@@ -1,0 +1,40 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout
+  title="Message Sent"
+  description="Thanks for getting in touch. We'll get back to you within 2 hours."
+  noIndex={true}
+>
+  <div class="page-container">
+    <div class="success-inner">
+      <div class="success-icon" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <h1 class="display-md" style="margin: 0 0 8px;">Message sent!</h1>
+      <p class="body-lg success-sub">We'll get back to you within 2 hours during business hours (Mon–Sat, 9 AM–8 PM IST).</p>
+      <div class="success-actions">
+        <a href="/equipment" class="btn-primary">Browse equipment</a>
+        <a href="/" class="btn-secondary">Back to home</a>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .page-container { max-width: 600px; margin: 0 auto; padding: 0 24px 80px; }
+  .success-inner {
+    padding: 80px 0 0;
+    display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0;
+  }
+  .success-icon {
+    width: 64px; height: 64px; margin-bottom: 24px;
+    background-color: var(--color-accent-soft);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--color-accent-deep);
+  }
+  .success-sub { color: var(--color-body); margin: 0 0 32px; max-width: 420px; }
+  .success-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+</style>

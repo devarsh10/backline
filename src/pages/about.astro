@@ -1,0 +1,69 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout
+  title="About Amply"
+  description="Amply is India's professional music gear rental company, serving musicians and events across Mumbai and Delhi."
+>
+  <div class="page-container">
+    <div class="about-hero">
+      <span class="caption-mono" style="color: var(--color-mute); display: block; margin-bottom: 12px;">About Amply</span>
+      <h1 class="display-xl about-title">We exist because musicians deserve better.</h1>
+      <p class="body-lg about-sub">Renting music gear in India was needlessly hard — opaque pricing, no transparency, gear that hadn't been serviced in years. We built Amply to fix that.</p>
+    </div>
+
+    <div class="about-points">
+      <div class="point-item">
+        <h3 class="point-title">Prices shown upfront</h3>
+        <p class="point-desc">Every item has a fixed daily price. No account needed, no quote required just to see the number.</p>
+      </div>
+      <div class="point-item">
+        <h3 class="point-title">Professional crew, not just delivery</h3>
+        <p class="point-desc">Our team delivers and physically sets up every item at your venue. When musicians arrive, everything is wired and tested — plug in and play.</p>
+      </div>
+      <div class="point-item">
+        <h3 class="point-title">Gear you can trust</h3>
+        <p class="point-desc">Every item is inspected and serviced before each rental. We've supported 500+ events across India without a single on-stage gear failure.</p>
+      </div>
+      <div class="point-item">
+        <h3 class="point-title">Simple ordering</h3>
+        <p class="point-desc">Browse, add to cart, checkout. Same as ordering anything online. No back-and-forth required to place a booking.</p>
+      </div>
+    </div>
+
+    <div class="about-cta">
+      <a href="/equipment" class="btn-primary">Browse equipment</a>
+      <a href="/contact" class="btn-secondary">Get in touch</a>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .page-container { max-width: 880px; margin: 0 auto; padding: 0 24px 80px; }
+  .about-hero { padding: 60px 0 48px; }
+  .about-title { margin: 0 0 16px; }
+  .about-sub { color: var(--color-body); margin: 0; max-width: 640px; }
+
+  .about-points {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+    background-color: var(--color-hairline);
+    border: 1px solid var(--color-hairline); border-radius: var(--radius-lg);
+    overflow: hidden; margin-bottom: 48px;
+  }
+  .point-item {
+    background-color: var(--color-canvas);
+    padding: 28px 32px;
+  }
+  .point-title { font-size: 15px; font-weight: 600; color: var(--color-ink); letter-spacing: -0.02em; margin: 0 0 8px; }
+  .point-desc { font-size: 14px; color: var(--color-body); line-height: 1.6; margin: 0; }
+
+  .about-cta { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  @media (max-width: 640px) {
+    .about-points { grid-template-columns: 1fr; }
+    .point-item { padding: 22px 20px; }
+    .page-container { padding: 0 16px 60px; }
+    .about-hero { padding: 40px 0 32px; }
+  }
+</style>

@@ -1,0 +1,223 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout
+  title="Your Cart"
+  description="Review your selected equipment and proceed to checkout."
+  noIndex={true}
+>
+  <div class="page-container">
+    <div class="cart-header">
+      <h1 class="display-lg">Your cart</h1>
+      <p class="body-md cart-sub" id="cart-sub-text">Loading…</p>
+    </div>
+
+    <!-- Empty state -->
+    <div class="empty-state" id="empty-state" style="display:none;">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3">
+        <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+      </svg>
+      <h2 class="display-sm">Your cart is empty.</h2>
+      <p class="body-md" style="color: var(--color-body);">Browse our equipment catalog and add what you need.</p>
+      <a href="/equipment" class="btn-primary">Browse Equipment</a>
+    </div>
+
+    <!-- Cart content -->
+    <div class="cart-content" id="cart-content" style="display:none;">
+      <div class="cart-layout">
+        <!-- Items -->
+        <div class="cart-items" id="cart-items-list"></div>
+
+        <!-- Summary -->
+        <aside class="cart-summary">
+          <div class="summary-card">
+            <h2 class="summary-title">Order summary</h2>
+
+            <div class="summary-row">
+              <span>Per-day subtotal</span>
+              <span id="summary-subtotal">—</span>
+            </div>
+            <div class="summary-note">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Multi-day discounts applied at checkout (up to 10% off)
+            </div>
+
+            <hr class="divider" style="margin: 16px 0;" />
+
+            <a href="/checkout" class="btn-primary checkout-btn">
+              Proceed to Checkout →
+            </a>
+            <a href="/equipment" class="btn-secondary continue-btn">
+              Add more equipment
+            </a>
+          </div>
+
+          <div class="trust-card">
+            <div class="trust-row">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              Professional crew delivers &amp; sets up
+            </div>
+            <div class="trust-row">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              All lines tested on arrival
+            </div>
+            <div class="trust-row">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              Refundable deposit
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .page-container { max-width: 1280px; margin: 0 auto; padding: 0 24px 80px; }
+  .cart-header { padding: 48px 0 32px; }
+  .cart-header h1 { margin: 0 0 6px; }
+  .cart-sub { color: var(--color-mute); margin: 0; }
+
+  .empty-state {
+    padding: 80px 24px;
+    text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+    border: 1px dashed var(--color-hairline); border-radius: var(--radius-lg);
+  }
+
+  .cart-layout { display: grid; grid-template-columns: 1fr 320px; gap: 40px; align-items: start; }
+  .cart-items { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--color-hairline); border-radius: var(--radius-lg); overflow: hidden; }
+
+  .summary-card {
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-hairline); border-radius: var(--radius-lg);
+    padding: 24px; margin-bottom: 12px;
+  }
+  .summary-title { font-size: 16px; font-weight: 600; color: var(--color-ink); letter-spacing: -0.02em; margin: 0 0 16px; }
+  .summary-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: var(--color-body); margin-bottom: 8px; }
+  .summary-row span:last-child { font-weight: 600; color: var(--color-ink); }
+  .summary-note {
+    display: flex; align-items: flex-start; gap: 6px;
+    font-size: 12px; color: var(--color-mute); line-height: 1.5;
+    background-color: var(--color-canvas-soft-2); border-radius: var(--radius-sm);
+    padding: 8px 10px; margin-top: 4px;
+  }
+  .summary-note svg { flex-shrink: 0; margin-top: 1px; }
+  .checkout-btn { width: 100%; justify-content: center; margin-bottom: 8px; }
+  .continue-btn { width: 100%; justify-content: center; }
+
+  .trust-card {
+    background-color: var(--color-canvas-soft);
+    border: 1px solid var(--color-hairline); border-radius: var(--radius-md);
+    padding: 14px 16px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .trust-row { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--color-mute); }
+  .trust-row svg { color: var(--color-accent-deep); flex-shrink: 0; }
+
+  @media (max-width: 768px) {
+    .cart-layout { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 480px) {
+    .page-container { padding: 0 16px 60px; }
+    .cart-header { padding: 32px 0 20px; }
+  }
+</style>
+
+<script>
+  import { getCart, removeFromCart, getCartSubtotalPerDay, getCartCount, formatPrice, updateCartBadge } from '../scripts/cart';
+
+  function formatPriceLocal(n: number) { return `₹${n.toLocaleString('en-IN')}`; }
+
+  function renderCart() {
+    const cart = getCart();
+    const emptyEl = document.getElementById('empty-state')!;
+    const contentEl = document.getElementById('cart-content')!;
+    const subText = document.getElementById('cart-sub-text')!;
+    const itemsList = document.getElementById('cart-items-list')!;
+    const summarySubtotal = document.getElementById('summary-subtotal')!;
+
+    const count = getCartCount();
+    subText.textContent = count === 0 ? 'No items yet' : `${count} item${count !== 1 ? 's' : ''}`;
+
+    if (cart.length === 0) {
+      emptyEl.style.display = 'flex';
+      contentEl.style.display = 'none';
+      return;
+    }
+
+    emptyEl.style.display = 'none';
+    contentEl.style.display = 'block';
+
+    itemsList.innerHTML = cart.map(item => `
+      <div class="cart-item" data-slug="${item.slug}">
+        <div class="item-img">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.2">
+            <path d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/>
+          </svg>
+        </div>
+        <div class="item-info">
+          <p class="item-brand">${item.brand}</p>
+          <a href="/equipment/${item.category}/${item.slug}" class="item-name">${item.name}</a>
+          <p class="item-unit-price">${formatPriceLocal(item.pricePerDay)}/day</p>
+        </div>
+        <div class="item-controls">
+          <span class="item-line-total">${formatPriceLocal(item.pricePerDay)}/day</span>
+          <button class="remove-btn" data-slug="${item.slug}" aria-label="Remove ${item.name}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+    `).join('');
+
+    // Remove event listeners
+    itemsList.querySelectorAll<HTMLButtonElement>('.remove-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        removeFromCart(btn.dataset.slug!);
+        renderCart();
+        updateCartBadge();
+      });
+    });
+
+    summarySubtotal.textContent = `${formatPriceLocal(getCartSubtotalPerDay())}/day`;
+  }
+
+  renderCart();
+</script>
+
+<style is:global>
+  .cart-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 20px;
+    background-color: var(--color-canvas);
+    border-bottom: 1px solid var(--color-hairline);
+  }
+  .cart-item:last-child { border-bottom: none; }
+  .item-img {
+    width: 52px; height: 52px; flex-shrink: 0;
+    background-color: var(--color-canvas-soft-2);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-hairline);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .item-info { flex: 1; min-width: 0; }
+  .item-brand { font-family: var(--font-mono); font-size: 10px; color: var(--color-mute); letter-spacing: 0.06em; text-transform: uppercase; margin: 0 0 2px; }
+  .item-name { font-size: 14px; font-weight: 500; color: var(--color-ink); text-decoration: none; display: block; margin-bottom: 2px; }
+  .item-name:hover { color: var(--color-link); }
+  .item-unit-price { font-size: 12px; color: var(--color-mute); margin: 0; }
+  .item-controls { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+  .item-line-total { font-size: 14px; font-weight: 600; color: var(--color-ink); white-space: nowrap; min-width: 80px; text-align: right; }
+  .remove-btn {
+    background: none; border: none; cursor: pointer; color: var(--color-mute);
+    padding: 4px; border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    transition: color 0.12s;
+  }
+  .remove-btn:hover { color: var(--color-error); }
+  @media (max-width: 560px) {
+    .cart-item { flex-wrap: wrap; }
+    .item-controls { width: 100%; justify-content: space-between; }
+  }
+</style>

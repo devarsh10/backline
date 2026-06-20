@@ -1,0 +1,40 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Page Not Found" noIndex={true}>
+  <div class="not-found">
+    <p class="error-code">404</p>
+    <h1 class="display-lg error-title">Page not found.</h1>
+    <p class="error-sub">The page you're looking for doesn't exist or has been moved.</p>
+    <div class="error-actions">
+      <a href="/" class="btn-primary">Go home</a>
+      <a href="/equipment" class="btn-secondary">Browse equipment</a>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .not-found {
+    min-height: 70vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    padding: 80px 24px;
+  }
+  .error-code {
+    font-family: var(--font-display);
+    font-size: clamp(80px, 15vw, 160px);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--color-hairline-strong);
+    line-height: 1;
+    margin: 0 0 8px;
+  }
+  .error-title { margin: 0 0 16px; }
+  .error-sub {
+    font-size: 17px; color: var(--color-body);
+    margin: 0 0 36px; max-width: 400px;
+  }
+  .error-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+</style>

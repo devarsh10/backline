@@ -1,0 +1,150 @@
+---
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-top">
+      <!-- Brand -->
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <span class="footer-logo-mark">A</span>
+          <span class="footer-logo-text">Amply</span>
+        </div>
+        <p class="footer-tagline">Professional music gear rental for musicians, studios, and events across India.</p>
+        <div class="footer-trust-pills">
+          <span class="footer-trust-pill">Professional crew setup</span>
+          <span class="footer-trust-pill">Plug &amp; play on arrival</span>
+        </div>
+      </div>
+
+      <!-- Equipment -->
+      <div class="footer-col">
+        <span class="footer-col-heading">Equipment</span>
+        <a href="/equipment/drums" class="footer-link">Drums &amp; Cymbals</a>
+        <a href="/equipment/guitars" class="footer-link">Guitars &amp; Bass Guitars</a>
+        <a href="/equipment/amplifiers" class="footer-link">Guitar Amplifiers &amp; Cabinets</a>
+        <a href="/equipment/keyboards" class="footer-link">Keyboards, Synths &amp; Accessories</a>
+        <a href="/equipment/percussion" class="footer-link">Percussion</a>
+        <a href="/equipment/accessories" class="footer-link">Miscellaneous Accessories</a>
+      </div>
+
+      <!-- Company -->
+      <div class="footer-col">
+        <span class="footer-col-heading">Company</span>
+        <a href="/about" class="footer-link">About Amply</a>
+        <a href="/contact" class="footer-link">Contact Us</a>
+        <a href="/cart" class="footer-link">Your Cart</a>
+      </div>
+
+      <!-- Contact -->
+      <div class="footer-col">
+        <span class="footer-col-heading">Get in Touch</span>
+        <p class="footer-contact-line">Ahmedabad, Gujarat, India</p>
+        <a href="tel:+919999999999" class="footer-link">+91 99999 99999</a>
+        <a href="mailto:hello@amply.in" class="footer-link">hello@amply.in</a>
+        <p class="footer-contact-line" style="margin-top: 12px;">Reply within 2 hours</p>
+      </div>
+    </div>
+
+    <hr class="divider" />
+
+    <div class="footer-bottom">
+      <p class="footer-legal">© {year} Amply. All rights reserved.</p>
+      <div class="footer-legal-links">
+        <a href="/privacy" class="footer-link-sm">Privacy Policy</a>
+        <a href="/terms" class="footer-link-sm">Terms of Service</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    background-color: var(--color-canvas);
+    border-top: 1px solid var(--color-hairline);
+    margin-top: 80px;
+  }
+  .footer-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 64px 24px 32px;
+  }
+  .footer-top {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 48px;
+  }
+  .footer-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .footer-logo-mark {
+    width: 26px; height: 26px;
+    background-color: var(--color-ink); color: var(--color-on-primary);
+    border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+  }
+  .footer-logo-text {
+    font-size: 15px; font-weight: 600;
+    color: var(--color-ink); letter-spacing: -0.03em;
+  }
+  .footer-tagline {
+    font-size: 13px; color: var(--color-body);
+    line-height: 1.6; margin: 0 0 14px; max-width: 260px;
+  }
+  .footer-trust-pills { display: flex; flex-direction: column; gap: 6px; }
+  .footer-trust-pill {
+    display: inline-flex; align-items: center;
+    font-size: 11px; color: var(--color-mute);
+    background-color: var(--color-canvas-soft-2);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-full);
+    padding: 3px 10px;
+    width: fit-content;
+  }
+  .footer-col {
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .footer-col-heading {
+    font-family: var(--font-mono);
+    font-size: 11px; font-weight: 400;
+    color: var(--color-mute);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .footer-link {
+    font-size: 13px; color: var(--color-body);
+    text-decoration: none; padding: 3px 0;
+    transition: color 0.12s;
+  }
+  .footer-link:hover { color: var(--color-ink); }
+  .footer-contact-line {
+    font-size: 13px; color: var(--color-mute);
+    margin: 0; padding: 3px 0;
+  }
+  .footer-bottom {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-top: 24px; gap: 16px; flex-wrap: wrap;
+  }
+  .footer-legal { font-size: 12px; color: var(--color-mute); margin: 0; }
+  .footer-legal-links { display: flex; gap: 16px; }
+  .footer-link-sm {
+    font-size: 12px; color: var(--color-mute);
+    text-decoration: none; transition: color 0.12s;
+  }
+  .footer-link-sm:hover { color: var(--color-body); }
+
+  @media (max-width: 900px) {
+    .footer-top { grid-template-columns: 1fr 1fr; gap: 32px; }
+    .footer-brand { grid-column: 1 / -1; }
+  }
+  @media (max-width: 480px) {
+    .footer-top { grid-template-columns: 1fr; gap: 28px; }
+    .footer-inner { padding: 48px 16px 24px; }
+  }
+</style>

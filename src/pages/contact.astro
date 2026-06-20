@@ -1,0 +1,217 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout
+  title="Contact Us"
+  description="Get in touch with Amply. Phone, email, or send us a message. We reply within 2 hours during business hours."
+>
+  <div class="page-container">
+    <div class="page-header">
+      <span class="caption-mono" style="color: var(--color-mute); display: block; margin-bottom: 12px;">Get in touch</span>
+      <h1 class="display-xl page-title">Questions? We're here.</h1>
+      <p class="body-lg page-sub">Need help building your cart, have a question about a specific item, or want a custom package built for your event — just reach out.</p>
+    </div>
+
+    <div class="contact-layout">
+      <!-- Contact methods -->
+      <div class="contact-main">
+        <div class="contact-methods">
+          <a href="tel:+919999999999" class="contact-method-card">
+            <div class="contact-method-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.1 19.79 19.79 0 0 1 1.61 4.48 2 2 0 0 1 3.6 2.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.16 6.16l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </div>
+            <div class="contact-method-body">
+              <h3 class="contact-method-title">Call us</h3>
+              <p class="contact-method-value">+91 99999 99999</p>
+              <p class="contact-method-note">Mon–Sat, 9 AM–8 PM IST</p>
+            </div>
+            <svg class="contact-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </a>
+
+          <a href="mailto:hello@amply.in" class="contact-method-card">
+            <div class="contact-method-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            </div>
+            <div class="contact-method-body">
+              <h3 class="contact-method-title">Email us</h3>
+              <p class="contact-method-value">hello@amply.in</p>
+              <p class="contact-method-note">Reply within 2 hours</p>
+            </div>
+            <svg class="contact-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </a>
+        </div>
+
+        <!-- Message form -->
+        <div class="message-card">
+          <h2 class="message-title">Send a message</h2>
+          <p class="message-sub">For custom package requests, outstation events, or anything else — we'll get back to you within 2 hours.</p>
+
+          <form
+            class="message-form"
+            name="contact"
+            method="POST"
+            data-netlify="true"
+            action="/contact-success"
+          >
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="c-name">Your name *</label>
+                <input class="form-input" type="text" id="c-name" name="name" placeholder="Arjun Sharma" required autocomplete="name" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="c-phone">Phone *</label>
+                <input class="form-input" type="tel" id="c-phone" name="phone" placeholder="+91 98765 43210" required autocomplete="tel" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="c-email">Email</label>
+              <input class="form-input" type="email" id="c-email" name="email" placeholder="arjun@example.com" autocomplete="email" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="c-message">Message *</label>
+              <textarea
+                class="form-input form-textarea"
+                id="c-message"
+                name="message"
+                rows="4"
+                required
+                placeholder="Tell us about your event, what gear you need, your city and dates…"
+              ></textarea>
+            </div>
+            <button type="submit" class="btn-primary" style="width: 100%; justify-content: center;">Send message</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Sidebar info -->
+      <aside class="contact-sidebar">
+        <div class="info-card">
+          <h3 class="info-card-title caption-mono">Contact details</h3>
+          <div class="info-list">
+            <div class="info-row">
+              <span class="info-label">Phone</span>
+              <a href="tel:+919999999999" class="info-value">+91 99999 99999</a>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Email</span>
+              <a href="mailto:hello@amply.in" class="info-value">hello@amply.in</a>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Hours</span>
+              <span class="info-value">Mon–Sat, 9 AM–8 PM IST</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Response</span>
+              <span class="info-value">Within 2 hours</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <h3 class="info-card-title caption-mono">Service areas</h3>
+          <div class="info-list">
+            <div class="info-row">
+              <span class="info-label">Mumbai</span>
+              <span class="info-value">Full metro coverage</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Delhi NCR</span>
+              <span class="info-value">Full NCR coverage</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Other cities</span>
+              <span class="info-value">Outstation on request</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-card info-card--soft">
+          <h3 class="info-card-title" style="font-size: 14px; font-weight: 600; color: var(--color-ink); letter-spacing: -0.02em; margin: 0 0 8px;">Ready to browse?</h3>
+          <p style="font-size: 13px; color: var(--color-body); margin: 0 0 14px; line-height: 1.5;">You can build your cart and place an order directly on the site — no call needed.</p>
+          <a href="/equipment" class="btn-primary" style="width: 100%; justify-content: center; font-size: 13px; padding: 8px 12px;">Browse equipment</a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .page-container { max-width: 1280px; margin: 0 auto; padding: 0 24px 80px; }
+  .page-header { padding: 60px 0 48px; max-width: 680px; }
+  .page-title { margin: 0 0 16px; }
+  .page-sub { color: var(--color-body); margin: 0; }
+
+  .contact-layout { display: grid; grid-template-columns: 1fr 320px; gap: 40px; align-items: start; }
+  .contact-main { display: flex; flex-direction: column; gap: 16px; }
+
+  .contact-methods { display: flex; flex-direction: column; gap: 8px; }
+  .contact-method-card {
+    display: flex; align-items: center; gap: 16px;
+    padding: 20px;
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-hairline); border-radius: var(--radius-md);
+    text-decoration: none; color: inherit;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .contact-method-card:hover { border-color: var(--color-hairline-strong); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .contact-method-icon {
+    width: 44px; height: 44px; flex-shrink: 0;
+    background-color: var(--color-canvas-soft-2);
+    border: 1px solid var(--color-hairline); border-radius: var(--radius-md);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--color-body);
+  }
+  .contact-method-body { flex: 1; }
+  .contact-method-title { font-size: 14px; font-weight: 600; color: var(--color-ink); margin: 0 0 2px; }
+  .contact-method-value { font-size: 15px; font-weight: 500; color: var(--color-ink); margin: 0 0 2px; }
+  .contact-method-note { font-size: 12px; color: var(--color-mute); margin: 0; }
+  .contact-arrow { color: var(--color-mute); flex-shrink: 0; }
+
+  .message-card {
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-hairline); border-radius: var(--radius-lg);
+    padding: 28px;
+  }
+  .message-title { font-size: 18px; font-weight: 600; letter-spacing: -0.03em; margin: 0 0 4px; }
+  .message-sub { font-size: 14px; color: var(--color-mute); margin: 0 0 20px; }
+  .message-form { display: flex; flex-direction: column; gap: 14px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-label { font-size: 12px; font-weight: 500; color: var(--color-body); }
+  .form-input {
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-hairline); border-radius: var(--radius-sm);
+    color: var(--color-ink); font-size: 14px; font-family: var(--font-sans);
+    height: 40px; padding: 0 12px;
+    transition: border-color 0.15s; width: 100%;
+  }
+  .form-input:focus { border-color: var(--color-ink); outline: none; }
+  .form-textarea { height: auto; padding: 10px 12px; resize: vertical; line-height: 1.5; }
+
+  .contact-sidebar { display: flex; flex-direction: column; gap: 12px; position: sticky; top: 76px; }
+  .info-card {
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-hairline); border-radius: var(--radius-md);
+    padding: 18px;
+  }
+  .info-card--soft { background-color: var(--color-canvas-soft-2); }
+  .info-card-title { color: var(--color-mute); display: block; margin-bottom: 12px; }
+  .info-list { display: flex; flex-direction: column; gap: 10px; }
+  .info-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .info-label { font-size: 12px; color: var(--color-mute); flex-shrink: 0; }
+  .info-value { font-size: 13px; color: var(--color-ink); font-weight: 500; text-align: right; text-decoration: none; }
+  a.info-value:hover { color: var(--color-link); }
+
+  @media (max-width: 960px) {
+    .contact-layout { grid-template-columns: 1fr; }
+    .contact-sidebar { position: static; }
+  }
+  @media (max-width: 560px) {
+    .page-container { padding: 0 16px 60px; }
+    .page-header { padding: 40px 0 32px; }
+    .message-card { padding: 20px 16px; }
+    .form-row { grid-template-columns: 1fr; }
+    .contact-method-card { flex-wrap: wrap; }
+  }
+</style>

@@ -1,0 +1,393 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout
+  title="Checkout"
+  description="Complete your gear rental order."
+  noIndex={true}
+>
+  <div class="page-container">
+    <div class="checkout-header">
+      <a href="/cart" class="back-link">← Back to cart</a>
+      <h1 class="display-lg">Checkout</h1>
+    </div>
+
+    <!-- Empty redirect guard -->
+    <div id="empty-guard" style="display:none;" class="empty-guard">
+      <p class="body-md" style="color: var(--color-body);">Your cart is empty.</p>
+      <a href="/equipment" class="btn-primary">Browse Equipment</a>
+    </div>
+
+    <div class="checkout-layout" id="checkout-layout">
+      <!-- Left: form -->
+      <div class="checkout-form-col">
+
+        <!-- Rental dates -->
+        <section class="checkout-section">
+          <h2 class="section-title">Rental dates</h2>
+          <p class="section-sub">All items in your cart will be rented for these dates.</p>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="date-from">Start date *</label>
+              <input class="form-input" type="date" id="date-from" name="date_from" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="date-to">End date *</label>
+              <input class="form-input" type="date" id="date-to" name="date_to" required />
+            </div>
+          </div>
+          <div class="dates-calc" id="dates-calc" style="display:none;">
+            <span id="dates-days-label"></span>
+            <span id="dates-discount-label" class="discount-label" style="display:none;"></span>
+          </div>
+        </section>
+
+        <!-- Your details -->
+        <section class="checkout-section">
+          <h2 class="section-title">Your details</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="c-name">Full name *</label>
+              <input class="form-input" type="text" id="c-name" name="name" placeholder="Arjun Sharma" required autocomplete="name" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="c-phone">Phone / WhatsApp *</label>
+              <input class="form-input" type="tel" id="c-phone" name="phone" placeholder="+91 98765 43210" required autocomplete="tel" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="c-email">Email address *</label>
+              <input class="form-input" type="email" id="c-email" name="email" placeholder="arjun@example.com" required autocomplete="email" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="c-city">City *</label>
+              <select class="form-input" id="c-city" name="city" required>
+                <option value="">Select city</option>
+                <option value="Mumbai">Mumbai</option>
+                <option value="Delhi / NCR">Delhi / NCR</option>
+                <option value="Bangalore">Bangalore</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="c-venue">Venue / delivery address</label>
+            <input class="form-input" type="text" id="c-venue" name="venue" placeholder="Venue name or address" autocomplete="off" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="c-notes">Additional notes</label>
+            <textarea class="form-input form-textarea" id="c-notes" name="notes" rows="3" placeholder="Stage dimensions, load-in time, access instructions…"></textarea>
+          </div>
+        </section>
+
+        <!-- Payment info -->
+        <section class="payment-info-band">
+          <div class="payment-info-inner">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="payment-icon"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            <div>
+              <p class="payment-info-title">How payment works</p>
+              <p class="payment-info-desc">After you place your order, we'll confirm your booking within 2 hours and share UPI / bank transfer details for payment. No card details needed now.</p>
+            </div>
+          </div>
+        </section>
+
+        <button type="button" class="btn-primary place-order-btn" id="place-order-btn">
+          Place Order
+        </button>
+        <p class="order-footnote">By placing an order you agree to our <a href="/terms" class="inline-link">terms of service</a>.</p>
+      </div>
+
+      <!-- Right: order summary -->
+      <aside class="order-summary-col">
+        <div class="order-summary-card">
+          <h2 class="summary-card-title">Your order</h2>
+          <div id="order-items-list"></div>
+          <hr class="divider" style="margin: 16px 0;" />
+          <div class="summary-line">
+            <span>Per-day subtotal</span>
+            <span id="oc-subtotal">—</span>
+          </div>
+          <div class="summary-line" id="discount-line" style="display:none;">
+            <span id="discount-label-text" class="discount-text">Multi-day discount</span>
+            <span id="oc-discount" class="discount-text">—</span>
+          </div>
+          <div class="summary-line summary-line--days" id="days-line" style="display:none;">
+            <span id="oc-days-label"></span>
+            <span id="oc-total" class="total-val">—</span>
+          </div>
+          <p class="summary-note" id="summary-date-note" style="display:none;"></p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .page-container { max-width: 1280px; margin: 0 auto; padding: 0 24px 80px; }
+  .checkout-header { padding: 32px 0 24px; }
+  .back-link { font-size: 13px; color: var(--color-mute); text-decoration: none; display: block; margin-bottom: 12px; }
+  .back-link:hover { color: var(--color-body); }
+  .checkout-header h1 { margin: 0; }
+
+  .empty-guard { padding: 48px 0; display: flex; flex-direction: column; gap: 16px; }
+  .checkout-layout { display: grid; grid-template-columns: 1fr 340px; gap: 40px; align-items: start; }
+
+  .checkout-section {
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-hairline); border-radius: var(--radius-lg);
+    padding: 24px; margin-bottom: 16px;
+  }
+  .section-title { font-size: 16px; font-weight: 600; color: var(--color-ink); letter-spacing: -0.02em; margin: 0 0 4px; }
+  .section-sub { font-size: 13px; color: var(--color-mute); margin: 0 0 16px; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 0; }
+  .form-label { font-size: 12px; font-weight: 500; color: var(--color-body); }
+  .form-input {
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-hairline); border-radius: var(--radius-sm);
+    color: var(--color-ink); font-size: 14px; font-family: var(--font-sans);
+    height: 40px; padding: 0 12px;
+    transition: border-color 0.15s; width: 100%;
+  }
+  .form-input:focus { border-color: var(--color-ink); outline: none; }
+  .form-textarea { height: auto; padding: 10px 12px; resize: vertical; line-height: 1.5; }
+
+  .dates-calc {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    margin-top: 12px; padding: 10px 14px;
+    background-color: var(--color-canvas-soft-2);
+    border-radius: var(--radius-sm);
+    font-size: 13px; color: var(--color-body);
+  }
+  .discount-label {
+    background-color: var(--color-accent-soft);
+    color: var(--color-accent-deep);
+    font-weight: 500; padding: 2px 8px;
+    border-radius: var(--radius-full); font-size: 12px;
+  }
+
+  .payment-info-band {
+    background-color: var(--color-canvas-soft-2);
+    border: 1px solid var(--color-hairline); border-radius: var(--radius-md);
+    padding: 16px; margin-bottom: 16px;
+  }
+  .payment-info-inner { display: flex; align-items: flex-start; gap: 12px; }
+  .payment-icon { color: var(--color-body); flex-shrink: 0; margin-top: 2px; }
+  .payment-info-title { font-size: 13px; font-weight: 600; color: var(--color-ink); margin: 0 0 4px; }
+  .payment-info-desc { font-size: 13px; color: var(--color-body); margin: 0; line-height: 1.6; }
+
+  .place-order-btn { width: 100%; justify-content: center; font-size: 16px; padding: 12px 20px; }
+  .order-footnote { font-size: 12px; color: var(--color-mute); text-align: center; margin: 8px 0 0; }
+  .inline-link { color: var(--color-link); }
+
+  /* Summary card */
+  .order-summary-card {
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-hairline); border-radius: var(--radius-lg);
+    padding: 24px; position: sticky; top: 76px;
+  }
+  .summary-card-title { font-size: 15px; font-weight: 600; color: var(--color-ink); margin: 0 0 14px; }
+  .summary-line {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 14px; color: var(--color-body); margin-bottom: 8px;
+  }
+  .summary-line span:last-child { font-weight: 500; color: var(--color-ink); }
+  .summary-line--days { padding-top: 8px; border-top: 1px solid var(--color-hairline); }
+  .total-val { font-size: 18px; font-weight: 700; color: var(--color-ink); letter-spacing: -0.02em; }
+  .discount-text { color: var(--color-accent-deep); }
+  .summary-note { font-size: 11px; color: var(--color-mute); margin: 8px 0 0; line-height: 1.5; }
+
+  @media (max-width: 960px) {
+    .checkout-layout { grid-template-columns: 1fr; }
+    .order-summary-card { position: static; }
+  }
+  @media (max-width: 560px) {
+    .page-container { padding: 0 16px 60px; }
+    .form-row { grid-template-columns: 1fr; }
+    .checkout-section { padding: 20px 16px; }
+  }
+</style>
+
+<style is:global>
+  .oc-item { display: flex; align-items: flex-start; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--color-hairline); }
+  .oc-item:last-child { border-bottom: none; }
+  .oc-item-info { flex: 1; }
+  .oc-item-name { font-size: 13px; font-weight: 500; color: var(--color-ink); margin: 0 0 1px; }
+  .oc-item-meta { font-size: 12px; color: var(--color-mute); margin: 0; }
+  .oc-item-price { font-size: 13px; font-weight: 600; color: var(--color-ink); white-space: nowrap; }
+</style>
+
+<script>
+  import {
+    getCart, clearCart, saveLastOrder, generateOrderRef,
+    getCartSubtotalPerDay, getDiscountForDays, formatPrice, updateCartBadge
+  } from '../scripts/cart';
+
+  const cart = getCart();
+
+  // Guard: redirect if empty
+  if (cart.length === 0) {
+    document.getElementById('empty-guard')!.style.display = 'flex';
+    document.getElementById('checkout-layout')!.style.display = 'none';
+  }
+
+  function fp(n: number) { return `₹${n.toLocaleString('en-IN')}`; }
+
+  // Render order items in summary
+  const itemsList = document.getElementById('order-items-list')!;
+  itemsList.innerHTML = cart.map(item => `
+    <div class="oc-item">
+      <div class="oc-item-info">
+        <p class="oc-item-name">${item.name}</p>
+        <p class="oc-item-meta">${item.brand} · qty ${item.quantity}</p>
+      </div>
+      <span class="oc-item-price">${fp(item.pricePerDay * item.quantity)}/day</span>
+    </div>
+  `).join('');
+
+  const subtotalPerDay = getCartSubtotalPerDay();
+  document.getElementById('oc-subtotal')!.textContent = `${fp(subtotalPerDay)}/day`;
+
+  // Date calculation
+  const dateFrom = document.getElementById('date-from') as HTMLInputElement;
+  const dateTo = document.getElementById('date-to') as HTMLInputElement;
+
+  function recalc() {
+    if (!dateFrom.value || !dateTo.value) {
+      document.getElementById('dates-calc')!.style.display = 'none';
+      document.getElementById('days-line')!.style.display = 'none';
+      document.getElementById('discount-line')!.style.display = 'none';
+      document.getElementById('summary-date-note')!.style.display = 'none';
+      return;
+    }
+    const from = new Date(dateFrom.value);
+    const to = new Date(dateTo.value);
+    const days = Math.max(1, Math.round((to.getTime() - from.getTime()) / 86400000) + 1);
+    const discountPct = getDiscountForDays(days);
+    const discountAmt = Math.round(subtotalPerDay * days * discountPct / 100);
+    const total = subtotalPerDay * days - discountAmt;
+
+    const datesCalc = document.getElementById('dates-calc')!;
+    const discountLabelEl = document.getElementById('dates-discount-label')!;
+    datesCalc.style.display = 'flex';
+    document.getElementById('dates-days-label')!.textContent = `${days} day${days !== 1 ? 's' : ''} rental`;
+    if (discountPct > 0) {
+      discountLabelEl.style.display = 'inline';
+      discountLabelEl.textContent = `${discountPct}% multi-day discount applied`;
+    } else {
+      discountLabelEl.style.display = 'none';
+    }
+
+    // Summary
+    const daysLine = document.getElementById('days-line')!;
+    const discountLine = document.getElementById('discount-line')!;
+    daysLine.style.display = 'flex';
+    document.getElementById('oc-days-label')!.textContent = `Total (${days} days)`;
+    document.getElementById('oc-total')!.textContent = fp(total);
+
+    if (discountPct > 0) {
+      discountLine.style.display = 'flex';
+      document.getElementById('oc-discount')!.textContent = `−${fp(discountAmt)}`;
+      document.getElementById('discount-label-text')!.textContent = `${discountPct}% discount`;
+    } else {
+      discountLine.style.display = 'none';
+    }
+
+    const noteEl = document.getElementById('summary-date-note')!;
+    noteEl.style.display = 'block';
+    const opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' };
+    noteEl.textContent = `${from.toLocaleDateString('en-IN', opts)} – ${to.toLocaleDateString('en-IN', opts)}`;
+  }
+
+  dateFrom.addEventListener('change', recalc);
+  dateTo.addEventListener('change', recalc);
+
+  // Set minimum date to today
+  const today = new Date().toISOString().split('T')[0];
+  dateFrom.min = today;
+  dateTo.min = today;
+  dateFrom.addEventListener('change', () => { dateTo.min = dateFrom.value; });
+
+  // Place order
+  document.getElementById('place-order-btn')!.addEventListener('click', async () => {
+    const name = (document.getElementById('c-name') as HTMLInputElement).value.trim();
+    const phone = (document.getElementById('c-phone') as HTMLInputElement).value.trim();
+    const email = (document.getElementById('c-email') as HTMLInputElement).value.trim();
+    const city = (document.getElementById('c-city') as HTMLSelectElement).value;
+    const venue = (document.getElementById('c-venue') as HTMLInputElement).value.trim();
+    const notes = (document.getElementById('c-notes') as HTMLTextAreaElement).value.trim();
+    const fromVal = dateFrom.value;
+    const toVal = dateTo.value;
+
+    if (!name || !phone || !email || !city || !fromVal || !toVal) {
+      alert('Please fill in all required fields (name, phone, email, city, and rental dates).');
+      return;
+    }
+
+    const days = Math.max(1, Math.round((new Date(toVal).getTime() - new Date(fromVal).getTime()) / 86400000) + 1);
+    const discountPct = getDiscountForDays(days);
+    const subtotal = getCartSubtotalPerDay() * days;
+    const discountAmt = Math.round(subtotal * discountPct / 100);
+    const total = subtotal - discountAmt;
+    const orderRef = generateOrderRef();
+
+    const order = {
+      ref: orderRef,
+      customer: { name, phone, email, city, venue, notes },
+      items: cart,
+      dates: { from: fromVal, to: toVal, days },
+      pricing: { subtotalPerDay: getCartSubtotalPerDay(), subtotal, discountPct, discountAmt, total },
+    };
+
+    // Disable button
+    const btn = document.getElementById('place-order-btn') as HTMLButtonElement;
+    btn.disabled = true;
+    btn.textContent = 'Placing order…';
+
+    try {
+      // Submit to Netlify Forms
+      const formData = new URLSearchParams({
+        'form-name': 'order',
+        ref: orderRef,
+        name, phone, email, city, venue, notes,
+        date_from: fromVal, date_to: toVal,
+        days: String(days),
+        total: String(total),
+        order_json: JSON.stringify(order),
+      });
+      await fetch('/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData.toString(),
+      });
+    } catch (_) {
+      // Netlify submission is best-effort; proceed regardless
+    }
+
+    // Save order for confirmation page
+    saveLastOrder(order);
+    clearCart();
+    updateCartBadge();
+
+    window.location.href = '/order-confirmation';
+  });
+</script>
+
+<!-- Hidden Netlify form for detection -->
+<form name="order" data-netlify="true" style="display:none;">
+  <input type="text" name="ref" />
+  <input type="text" name="name" />
+  <input type="text" name="phone" />
+  <input type="email" name="email" />
+  <input type="text" name="city" />
+  <input type="text" name="venue" />
+  <textarea name="notes"></textarea>
+  <input type="text" name="date_from" />
+  <input type="text" name="date_to" />
+  <input type="number" name="days" />
+  <input type="number" name="total" />
+  <textarea name="order_json"></textarea>
+</form>

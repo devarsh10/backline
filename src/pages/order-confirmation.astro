@@ -1,0 +1,370 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout
+  title="Order Confirmed"
+  description="Your rental order has been received."
+  noIndex={true}
+>
+  <!-- Guard: shown until JS loads order data -->
+  <div id="loading-state" class="page-container" style="padding-top: 80px; text-align: center;">
+    <p style="color: var(--color-mute); font-size: 14px;">Loading your order…</p>
+  </div>
+
+  <!-- No order state -->
+  <div id="no-order-state" class="page-container" style="display:none; padding-top: 80px; text-align: center;">
+    <h1 class="display-sm" style="margin-bottom: 12px;">No order found</h1>
+    <p class="body-md" style="color: var(--color-body); margin-bottom: 24px;">We couldn't find a recent order. Did you already view this page?</p>
+    <a href="/equipment" class="btn-primary">Browse Equipment</a>
+  </div>
+
+  <!-- Confirmation content -->
+  <div id="confirm-content" class="page-container" style="display:none;">
+    <div class="confirm-inner">
+
+      <!-- Success header -->
+      <div class="success-header">
+        <div class="success-icon" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div>
+          <h1 class="display-md" style="margin: 0 0 4px;">Order received!</h1>
+          <p class="body-md" style="color: var(--color-body); margin: 0;">We'll confirm your booking within 2 hours.</p>
+        </div>
+      </div>
+
+      <!-- Ref band -->
+      <div class="ref-band">
+        <span class="ref-label">Order reference</span>
+        <span id="conf-ref" class="ref-val">—</span>
+      </div>
+
+      <!-- Two-column layout -->
+      <div class="confirm-layout">
+
+        <!-- Left: invoice card -->
+        <div class="invoice-card">
+          <div class="invoice-header">
+            <div class="invoice-logo">
+              <span class="inv-logo-mark">A</span>
+              <span class="inv-logo-text">Amply</span>
+            </div>
+            <div class="invoice-meta-right">
+              <p class="inv-meta-label">Invoice / Order Summary</p>
+              <p id="conf-date" class="inv-meta-val">—</p>
+            </div>
+          </div>
+
+          <!-- Bill to -->
+          <div class="invoice-section">
+            <p class="inv-section-label">Billed to</p>
+            <p id="conf-customer-name" class="inv-val-lg">—</p>
+            <p id="conf-customer-email" class="inv-val-sm">—</p>
+            <p id="conf-customer-phone" class="inv-val-sm">—</p>
+            <p id="conf-customer-city" class="inv-val-sm">—</p>
+          </div>
+
+          <!-- Rental dates -->
+          <div class="invoice-section">
+            <p class="inv-section-label">Rental period</p>
+            <p id="conf-dates" class="inv-val-lg">—</p>
+            <p id="conf-days" class="inv-val-sm">—</p>
+          </div>
+
+          <hr class="divider" />
+
+          <!-- Items -->
+          <div id="invoice-items" class="invoice-items"></div>
+
+          <hr class="divider" />
+
+          <!-- Totals -->
+          <div class="invoice-totals">
+            <div class="totals-row">
+              <span id="conf-subtotal-label">Per-day subtotal</span>
+              <span id="conf-subtotal">—</span>
+            </div>
+            <div class="totals-row" id="discount-row" style="display:none;">
+              <span id="discount-row-label" style="color: var(--color-accent-deep);">Discount</span>
+              <span id="conf-discount" style="color: var(--color-accent-deep);">—</span>
+            </div>
+            <div class="totals-row totals-row--total">
+              <span>Total</span>
+              <span id="conf-total">—</span>
+            </div>
+          </div>
+
+          <!-- Payment instruction -->
+          <div class="payment-block">
+            <p class="payment-block-title">Payment</p>
+            <p class="payment-block-desc">We'll share UPI / bank transfer details via email and phone after confirming your booking. No advance payment is required right now.</p>
+          </div>
+        </div>
+
+        <!-- Right: what happens next -->
+        <div class="next-steps-col">
+          <div class="next-steps-card">
+            <h2 class="next-steps-title">What happens next</h2>
+            <div class="steps-list">
+              <div class="step-item">
+                <div class="step-num">1</div>
+                <div class="step-body">
+                  <p class="step-name">Booking confirmation</p>
+                  <p class="step-desc">Our team reviews your order and calls / texts you within 2 hours to confirm availability and answer any questions.</p>
+                </div>
+              </div>
+              <div class="step-item">
+                <div class="step-num">2</div>
+                <div class="step-body">
+                  <p class="step-name">Payment details</p>
+                  <p class="step-desc">You'll receive UPI or bank transfer details. Once payment is done, your booking is locked in.</p>
+                </div>
+              </div>
+              <div class="step-item">
+                <div class="step-num">3</div>
+                <div class="step-body">
+                  <p class="step-name">Delivery & professional setup</p>
+                  <p class="step-desc">Our crew delivers and physically sets up all gear at your venue on the start date.</p>
+                </div>
+              </div>
+              <div class="step-item">
+                <div class="step-num">4</div>
+                <div class="step-body">
+                  <p class="step-name">Plug and play</p>
+                  <p class="step-desc">All cables run, all lines tested. Musicians walk in and play from the first note.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="contact-card">
+            <p class="contact-card-title">Need to make a change?</p>
+            <p class="contact-card-desc">Call or message us and quote your order reference. Changes are free up to 48 hours before the rental start date.</p>
+            <div class="contact-actions">
+              <a href="tel:+919999999999" class="btn-secondary contact-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.1 19.79 19.79 0 0 1 1.61 4.48 2 2 0 0 1 3.6 2.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.16 6.16l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                Call us
+              </a>
+              <a href="mailto:hello@amply.in" class="btn-secondary contact-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                Email us
+              </a>
+            </div>
+          </div>
+
+          <a href="/equipment" class="btn-secondary" style="width: 100%; justify-content: center;">
+            Browse more equipment
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .page-container { max-width: 1280px; margin: 0 auto; padding: 0 24px 80px; }
+  .confirm-inner { padding: 48px 0 0; }
+
+  /* Success header */
+  .success-header {
+    display: flex; align-items: center; gap: 16px;
+    margin-bottom: 24px;
+  }
+  .success-icon {
+    width: 48px; height: 48px; flex-shrink: 0;
+    background-color: var(--color-accent-soft);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--color-accent-deep);
+  }
+
+  /* Ref band */
+  .ref-band {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    background-color: var(--color-canvas-soft-2);
+    border: 1px solid var(--color-hairline); border-radius: var(--radius-md);
+    padding: 12px 16px; margin-bottom: 32px;
+  }
+  .ref-label { font-size: 12px; color: var(--color-mute); }
+  .ref-val {
+    font-family: var(--font-mono); font-size: 14px;
+    font-weight: 500; color: var(--color-ink);
+    letter-spacing: 0.04em;
+  }
+
+  /* Layout */
+  .confirm-layout { display: grid; grid-template-columns: 1fr 320px; gap: 32px; align-items: start; }
+
+  /* Invoice card */
+  .invoice-card {
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-hairline); border-radius: var(--radius-lg);
+    padding: 32px;
+  }
+  .invoice-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 24px;
+  }
+  .invoice-logo { display: flex; align-items: center; gap: 8px; }
+  .inv-logo-mark {
+    width: 26px; height: 26px; border-radius: 5px;
+    background-color: var(--color-ink); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+  }
+  .inv-logo-text { font-size: 15px; font-weight: 600; color: var(--color-ink); letter-spacing: -0.03em; }
+  .invoice-meta-right { text-align: right; }
+  .inv-meta-label { font-size: 11px; color: var(--color-mute); margin: 0 0 2px; }
+  .inv-meta-val { font-size: 13px; color: var(--color-body); margin: 0; }
+
+  .invoice-section { margin-bottom: 20px; }
+  .inv-section-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-mute); margin: 0 0 4px; }
+  .inv-val-lg { font-size: 15px; font-weight: 600; color: var(--color-ink); margin: 0 0 2px; }
+  .inv-val-sm { font-size: 13px; color: var(--color-body); margin: 0 0 1px; }
+
+  .invoice-totals { margin-top: 12px; }
+  .totals-row {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 14px; color: var(--color-body); padding: 5px 0;
+  }
+  .totals-row span:last-child { font-weight: 500; color: var(--color-ink); }
+  .totals-row--total {
+    font-size: 17px; font-weight: 700; color: var(--color-ink);
+    border-top: 1px solid var(--color-hairline); margin-top: 8px; padding-top: 12px;
+  }
+
+  .payment-block {
+    margin-top: 24px;
+    background-color: var(--color-canvas-soft-2);
+    border: 1px solid var(--color-hairline); border-radius: var(--radius-md);
+    padding: 16px;
+  }
+  .payment-block-title { font-size: 13px; font-weight: 600; color: var(--color-ink); margin: 0 0 4px; }
+  .payment-block-desc { font-size: 13px; color: var(--color-body); margin: 0; line-height: 1.6; }
+
+  /* Next steps */
+  .next-steps-card {
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-hairline); border-radius: var(--radius-lg);
+    padding: 24px; margin-bottom: 12px;
+  }
+  .next-steps-title { font-size: 15px; font-weight: 600; color: var(--color-ink); margin: 0 0 20px; letter-spacing: -0.02em; }
+  .steps-list { display: flex; flex-direction: column; gap: 0; }
+  .step-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--color-hairline); }
+  .step-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .step-num {
+    width: 22px; height: 22px; flex-shrink: 0;
+    background-color: var(--color-ink); color: #fff;
+    border-radius: 50%; font-size: 11px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    margin-top: 1px;
+  }
+  .step-name { font-size: 13px; font-weight: 600; color: var(--color-ink); margin: 0 0 2px; }
+  .step-desc { font-size: 12px; color: var(--color-body); margin: 0; line-height: 1.6; }
+
+  .contact-card {
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-hairline); border-radius: var(--radius-md);
+    padding: 20px; margin-bottom: 12px;
+  }
+  .contact-card-title { font-size: 14px; font-weight: 600; color: var(--color-ink); margin: 0 0 4px; }
+  .contact-card-desc { font-size: 13px; color: var(--color-body); margin: 0 0 14px; line-height: 1.5; }
+  .contact-actions { display: flex; gap: 8px; }
+  .contact-btn { flex: 1; justify-content: center; gap: 6px; font-size: 13px; padding: 8px 12px; }
+
+  @media (max-width: 900px) {
+    .confirm-layout { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    .page-container { padding: 0 16px 60px; }
+    .confirm-inner { padding: 32px 0 0; }
+    .invoice-card { padding: 20px 16px; }
+    .invoice-header { flex-direction: column; gap: 12px; }
+    .invoice-meta-right { text-align: left; }
+  }
+</style>
+
+<style is:global>
+  .inv-item { display: flex; align-items: flex-start; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--color-hairline); }
+  .inv-item:last-child { border-bottom: none; }
+  .inv-item-info { flex: 1; }
+  .inv-item-name { font-size: 14px; font-weight: 500; color: var(--color-ink); margin: 0 0 1px; }
+  .inv-item-meta { font-size: 12px; color: var(--color-mute); margin: 0; }
+  .inv-item-price { font-size: 14px; font-weight: 600; color: var(--color-ink); white-space: nowrap; }
+</style>
+
+<script>
+  import { getLastOrder, formatPrice } from '../scripts/cart';
+
+  const loading = document.getElementById('loading-state')!;
+  const noOrder = document.getElementById('no-order-state')!;
+  const content = document.getElementById('confirm-content')!;
+
+  const order = getLastOrder();
+
+  loading.style.display = 'none';
+
+  if (!order) {
+    noOrder.style.display = 'block';
+  } else {
+    content.style.display = 'block';
+    renderOrder(order);
+  }
+
+  function fp(n: number) { return formatPrice(n); }
+
+  function renderOrder(order: any) {
+    // Ref
+    document.getElementById('conf-ref')!.textContent = order.ref;
+
+    // Date of order (today)
+    const today = new Date();
+    document.getElementById('conf-date')!.textContent = today.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    // Customer
+    const c = order.customer;
+    document.getElementById('conf-customer-name')!.textContent = c.name;
+    document.getElementById('conf-customer-email')!.textContent = c.email;
+    document.getElementById('conf-customer-phone')!.textContent = c.phone;
+    document.getElementById('conf-customer-city')!.textContent = c.city + (c.venue ? ` · ${c.venue}` : '');
+
+    // Dates
+    const dateOpts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' };
+    const fromDate = new Date(order.dates.from);
+    const toDate = new Date(order.dates.to);
+    document.getElementById('conf-dates')!.textContent =
+      `${fromDate.toLocaleDateString('en-IN', dateOpts)} – ${toDate.toLocaleDateString('en-IN', dateOpts)}`;
+    const d = order.dates.days;
+    document.getElementById('conf-days')!.textContent = `${d} day${d !== 1 ? 's' : ''}`;
+
+    // Items
+    const p = order.pricing;
+    const itemsEl = document.getElementById('invoice-items')!;
+    itemsEl.innerHTML = order.items.map((item: any) => {
+      const lineTotal = item.pricePerDay * item.quantity * d;
+      return `
+        <div class="inv-item">
+          <div class="inv-item-info">
+            <p class="inv-item-name">${item.name}</p>
+            <p class="inv-item-meta">${item.brand} · ${fp(item.pricePerDay)}/day × ${item.quantity} × ${d} day${d !== 1 ? 's' : ''}</p>
+          </div>
+          <span class="inv-item-price">${fp(lineTotal)}</span>
+        </div>
+      `;
+    }).join('');
+
+    // Totals
+    document.getElementById('conf-subtotal-label')!.textContent = `Subtotal (${d} days)`;
+    document.getElementById('conf-subtotal')!.textContent = fp(p.subtotal);
+
+    if (p.discountPct > 0) {
+      document.getElementById('discount-row')!.style.display = 'flex';
+      document.getElementById('discount-row-label')!.textContent = `${p.discountPct}% multi-day discount`;
+      document.getElementById('conf-discount')!.textContent = `−${fp(p.discountAmt)}`;
+    }
+
+    document.getElementById('conf-total')!.textContent = fp(p.total);
+  }
+</script>

@@ -1,0 +1,391 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import EquipmentCard from '../../../components/EquipmentCard.astro';
+import { equipment, getEquipmentBySlugs, getCategoryBySlug } from '../../../data/equipment';
+
+export async function getStaticPaths() {
+  return equipment.map(item => ({
+    params: { category: item.category, slug: item.slug },
+    props: { item },
+  }));
+}
+
+const { item } = Astro.props;
+const cat = getCategoryBySlug(item.category);
+const accessories = item.relatedAccessorySlugs ? getEquipmentBySlugs(item.relatedAccessorySlugs) : [];
+const relatedItems = equipment
+  .filter(e => e.category === item.category && e.slug !== item.slug && !item.relatedAccessorySlugs?.includes(e.slug))
+  .slice(0, 3);
+---
+
+<Layout
+  title={item.name}
+  description={`Rent the ${item.name} by ${item.brand} in India. From ₹${item.pricePerDay.toLocaleString('en-IN')}/day. Professional delivery and setup included.`}
+>
+  <div class="page-container">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/" class="bc-link">Home</a>
+      <span class="bc-sep" aria-hidden="true">/</span>
+      <a href="/equipment" class="bc-link">Rental Equipment</a>
+      <span class="bc-sep" aria-hidden="true">/</span>
+      <a href={`/equipment/${item.category}`} class="bc-link">{cat?.name}</a>
+      <span class="bc-sep" aria-hidden="true">/</span>
+      <span class="bc-current" aria-current="page">{item.name}</span>
+    </nav>
+
+    <!-- Product layout: image left, details right -->
+    <div class="product-layout">
+
+      <!-- LEFT: Image -->
+      <div class="product-image-col">
+        <div class="product-image-frame">
+          {item.image ? (
+            <img src={item.image} alt={item.name} class="product-photo" />
+          ) : (
+            <div class="product-image-placeholder" aria-hidden="true">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" opacity="0.12">
+                <path d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/>
+              </svg>
+              <span class="placeholder-label">Photo coming soon</span>
+            </div>
+          )}
+          {item.featured && <span class="featured-badge">Popular</span>}
+        </div>
+      </div>
+
+      <!-- RIGHT: All details -->
+      <div class="product-details-col">
+        <div class="details-inner">
+          <!-- Brand + category tags -->
+          <div class="detail-tags">
+            <span class="tag-brand">{item.brand}</span>
+            <span class="tag-cat">{cat?.name}</span>
+          </div>
+
+          <!-- Name -->
+          <h1 class="product-name">{item.name}</h1>
+          <p class="product-sub">{item.subcategory}</p>
+
+          <!-- Price -->
+          <div class="product-price-row">
+            <span class="price-amount">₹{item.pricePerDay.toLocaleString('en-IN')}</span>
+            <span class="price-unit">/day</span>
+          </div>
+
+          <!-- What's included -->
+          {item.included.length > 0 && (
+            <div class="included-block">
+              <p class="included-heading">What's included</p>
+              <ul class="included-list">
+                {item.included.map(inc => (
+                  <li class="included-item">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                    {inc}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <!-- Rental terms -->
+          <div class="terms-row">
+            <div class="term-cell">
+              <span class="term-label">Min. rental</span>
+              <span class="term-val">{item.minDays} day{item.minDays !== 1 ? 's' : ''}</span>
+            </div>
+<div class="term-cell">
+              <span class="term-label">Multi-day</span>
+              <span class="term-val term-accent">Up to 10% off</span>
+            </div>
+          </div>
+
+          <!-- Add to cart -->
+          <button
+            class="btn-primary add-btn"
+            id="sidebar-add-to-cart"
+            data-slug={item.slug}
+            data-name={item.name}
+            data-brand={item.brand}
+            data-category={item.category}
+            data-price={item.pricePerDay}
+          >
+            Add to Cart
+          </button>
+          <a href="/cart" class="btn-secondary view-cart-btn" style="display:none;" id="view-cart-link">
+            View Cart →
+          </a>
+
+          <!-- Trust -->
+          <div class="trust-list">
+            <div class="trust-row">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              Professional crew delivers &amp; sets up at your venue
+            </div>
+            <div class="trust-row">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              All lines tested — plug and play when you arrive
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- You may also want -->
+    {accessories.length > 0 && (
+      <div class="also-want-section">
+        <div class="also-want-header">
+          <h2 class="also-want-title">You may also want</h2>
+          <p class="also-want-sub">Add accessories to complete your setup.</p>
+        </div>
+        <div class="also-want-grid">
+          {accessories.map(acc => (
+            <div class="acc-card">
+              <a href={`/equipment/${acc.category}/${acc.slug}`} class="acc-img-link" tabindex="-1">
+                <div class="acc-img">
+                  {acc.image ? (
+                    <img src={acc.image} alt={acc.name} loading="lazy" />
+                  ) : (
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.2">
+                      <path d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/>
+                    </svg>
+                  )}
+                </div>
+              </a>
+              <div class="acc-body">
+                <p class="acc-brand">{acc.brand}</p>
+                <a href={`/equipment/${acc.category}/${acc.slug}`} class="acc-name">{acc.name}</a>
+                <p class="acc-price">₹{acc.pricePerDay.toLocaleString('en-IN')}/day</p>
+              </div>
+              <button
+                class="acc-add-btn"
+                data-slug={acc.slug}
+                data-name={acc.name}
+                data-brand={acc.brand}
+                data-category={acc.category}
+                data-price={acc.pricePerDay}
+                aria-label={`Add ${acc.name} to cart`}
+              >
+                + Add to Cart
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+    <!-- More from this category -->
+    {relatedItems.length > 0 && (
+      <div class="related-section">
+        <hr class="divider" />
+        <h2 class="related-title">More {cat?.name}</h2>
+        <div class="related-grid">
+          {relatedItems.map(r => (
+            <EquipmentCard item={r} compact />
+          ))}
+        </div>
+      </div>
+    )}
+  </div>
+</Layout>
+
+<style>
+  .page-container { max-width: 1280px; margin: 0 auto; padding: 0 24px 80px; }
+
+  /* Breadcrumb */
+  .breadcrumb { display: flex; align-items: center; gap: 6px; padding: 28px 0 0; flex-wrap: wrap; }
+  .bc-link { font-size: 13px; color: var(--color-mute); text-decoration: none; }
+  .bc-link:hover { color: var(--color-body); }
+  .bc-sep { font-size: 13px; color: var(--color-hairline-strong); }
+  .bc-current { font-size: 13px; color: var(--color-body); }
+
+  /* Product layout */
+  .product-layout {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 56px; padding-top: 32px; align-items: start;
+  }
+
+  /* Image column */
+  .product-image-col {}
+  .product-image-frame {
+    background-color: var(--color-canvas-soft-2);
+    border: 1px solid var(--color-hairline); border-radius: var(--radius-lg);
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+  .product-photo { width: 100%; height: 100%; object-fit: cover; }
+  .product-image-placeholder { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .placeholder-label { font-size: 12px; color: var(--color-mute); }
+  .featured-badge {
+    position: absolute; top: 12px; left: 12px;
+    background-color: var(--color-ink); color: var(--color-on-primary);
+    font-size: 11px; font-weight: 500; padding: 3px 10px;
+    border-radius: var(--radius-full);
+  }
+
+  /* Details column */
+  .product-details-col {}
+  .details-inner { position: sticky; top: 76px; }
+
+  .detail-tags { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  .tag-brand {
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--color-mute);
+    background-color: var(--color-canvas-soft-2);
+    border: 1px solid var(--color-hairline); border-radius: var(--radius-full);
+    padding: 3px 10px;
+  }
+  .tag-cat {
+    font-size: 12px; color: var(--color-mute);
+    border: 1px solid var(--color-hairline); border-radius: var(--radius-full);
+    padding: 3px 10px;
+  }
+
+  .product-name {
+    font-size: 26px; font-weight: 700; color: var(--color-ink);
+    letter-spacing: -0.03em; line-height: 1.2; margin: 0 0 4px;
+  }
+  .product-sub { font-size: 13px; color: var(--color-mute); margin: 0 0 18px; }
+
+  .product-price-row { display: flex; align-items: baseline; gap: 3px; margin-bottom: 24px; }
+  .price-amount { font-size: 32px; font-weight: 700; color: var(--color-ink); letter-spacing: -0.04em; }
+  .price-unit { font-size: 14px; color: var(--color-mute); }
+
+  /* Included */
+  .included-block { margin-bottom: 20px; }
+  .included-heading {
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--color-mute); margin: 0 0 10px;
+  }
+  .included-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+  .included-item {
+    display: flex; align-items: flex-start; gap: 8px;
+    font-size: 14px; color: var(--color-body); line-height: 1.4;
+  }
+  .included-item svg { color: var(--color-accent-deep); flex-shrink: 0; margin-top: 2px; }
+
+  /* Terms */
+  .terms-row { display: flex; gap: 0; margin-bottom: 24px; border: 1px solid var(--color-hairline); border-radius: var(--radius-md); overflow: hidden; }
+  .term-cell { flex: 1; padding: 10px 14px; text-align: center; border-right: 1px solid var(--color-hairline); }
+  .term-cell:last-child { border-right: none; }
+  .term-label { display: block; font-size: 11px; color: var(--color-mute); margin-bottom: 3px; }
+  .term-val { font-size: 13px; font-weight: 500; color: var(--color-ink); }
+  .term-accent { color: var(--color-accent-deep); }
+
+  /* Buttons */
+  .add-btn { width: 100%; justify-content: center; font-size: 15px; padding: 12px; margin-bottom: 8px; }
+  .view-cart-btn { width: 100%; justify-content: center; margin-bottom: 20px; }
+
+  /* Trust */
+  .trust-list { display: flex; flex-direction: column; gap: 8px; }
+  .trust-row {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 12px; color: var(--color-mute); line-height: 1.4;
+  }
+  .trust-row svg { color: var(--color-accent-deep); flex-shrink: 0; }
+
+  /* You may also want */
+  .also-want-section {
+    margin-top: 64px; padding-top: 56px; border-top: 2px solid var(--color-ink);
+  }
+  .also-want-header { margin-bottom: 28px; }
+  .also-want-title {
+    font-size: 24px; font-weight: 700; color: var(--color-ink);
+    letter-spacing: -0.03em; margin: 0 0 6px;
+  }
+  .also-want-sub { font-size: 14px; color: var(--color-mute); margin: 0; }
+
+  .also-want-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+  .acc-card {
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-hairline); border-radius: var(--radius-md);
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    transition: box-shadow 0.15s, border-color 0.15s;
+  }
+  .acc-card:hover { border-color: var(--color-hairline-strong); box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+  .acc-img-link { display: block; }
+  .acc-img {
+    background-color: var(--color-canvas-soft-2);
+    aspect-ratio: 3/2;
+    display: flex; align-items: center; justify-content: center;
+    border-bottom: 1px solid var(--color-hairline);
+    overflow: hidden;
+  }
+  .acc-img img { width: 100%; height: 100%; object-fit: cover; }
+  .acc-body { padding: 14px 16px 12px; flex: 1; }
+  .acc-brand { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-mute); margin: 0 0 4px; }
+  .acc-name { font-size: 14px; font-weight: 500; color: var(--color-ink); text-decoration: none; display: block; margin-bottom: 4px; line-height: 1.3; }
+  .acc-name:hover { color: var(--color-link); }
+  .acc-price { font-size: 13px; font-weight: 600; color: var(--color-ink); margin: 0; }
+  .acc-add-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; padding: 10px; margin-top: auto;
+    background-color: var(--color-ink); color: var(--color-on-primary);
+    border: none; cursor: pointer; font-size: 13px; font-weight: 500;
+    font-family: var(--font-sans); transition: opacity 0.15s;
+  }
+  .acc-add-btn:hover { opacity: 0.85; }
+  .acc-add-btn.added { background-color: var(--color-accent-deep); }
+
+  /* Related */
+  .related-section { padding-top: 48px; }
+  .related-title { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; margin: 20px 0 20px; }
+  .related-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+
+  @media (max-width: 900px) {
+    .product-layout { grid-template-columns: 1fr; gap: 32px; }
+    .details-inner { position: static; }
+    .also-want-grid { grid-template-columns: repeat(2, 1fr); }
+    .related-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 560px) {
+    .page-container { padding: 0 16px 60px; }
+    .also-want-grid { grid-template-columns: 1fr; }
+    .related-grid { grid-template-columns: 1fr; }
+    .terms-row { flex-wrap: wrap; }
+    .term-cell { flex: 1 1 40%; }
+  }
+</style>
+
+<script>
+  import { addToCart, updateCartBadge } from '../../../scripts/cart';
+
+  // Main add-to-cart
+  const addBtn = document.getElementById('sidebar-add-to-cart') as HTMLButtonElement;
+  const viewCartLink = document.getElementById('view-cart-link') as HTMLAnchorElement;
+  addBtn?.addEventListener('click', () => {
+    addToCart({
+      slug: addBtn.dataset.slug!,
+      name: addBtn.dataset.name!,
+      brand: addBtn.dataset.brand!,
+      category: addBtn.dataset.category!,
+      pricePerDay: Number(addBtn.dataset.price),
+    });
+    addBtn.textContent = '✓ Added to Cart';
+    viewCartLink.style.display = 'flex';
+    updateCartBadge();
+    setTimeout(() => { addBtn.textContent = 'Add to Cart'; }, 2000);
+  });
+
+  // Accessory add-to-cart
+  document.querySelectorAll<HTMLButtonElement>('.acc-add-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      addToCart({
+        slug: btn.dataset.slug!,
+        name: btn.dataset.name!,
+        brand: btn.dataset.brand!,
+        category: btn.dataset.category!,
+        pricePerDay: Number(btn.dataset.price),
+      });
+      btn.textContent = '✓ Added';
+      btn.classList.add('added');
+      updateCartBadge();
+      setTimeout(() => {
+        btn.textContent = '+ Add to Cart';
+        btn.classList.remove('added');
+      }, 1400);
+    });
+  });
+</script>
