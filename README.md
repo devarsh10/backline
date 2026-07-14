@@ -1,46 +1,25 @@
-# Astro Starter Kit: Basics
+# Amply
 
-```sh
-npm create astro@latest -- --template basics
-```
+Music gear rental site for events, concerts, and studios in India — browse equipment, add to cart, and checkout with no account needed. Built with [Astro](https://astro.build) + Tailwind CSS.
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+![Home page](docs/screenshots/home.png)
 
-## 🚀 Project Structure
+<p float="left">
+  <img src="docs/screenshots/equipment.png" width="49%" alt="Equipment listing" />
+  <img src="docs/screenshots/cart.png" width="49%" alt="Cart" />
+</p>
 
-Inside of your Astro project, you'll see the following folders and files:
+## Features
 
-```text
-/
-├── public/
-│   └── favicon.svg
-├── src
-│   ├── assets
-│   │   └── astro.svg
-│   ├── components
-│   │   └── Welcome.astro
-│   ├── layouts
-│   │   └── Layout.astro
-│   └── pages
-│       └── index.astro
-└── package.json
-```
+- Equipment catalog with search, filtering, and related-accessory recommendations
+- Cart + checkout flow (order details submitted via Netlify Forms, no payment gateway — payment is UPI/bank transfer post-confirmation)
+- Fully static, no backend or database
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
+## Commands
 
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+| Command         | Action                          |
+| :--------------- | :------------------------------ |
+| `npm install`     | Install dependencies            |
+| `npm run dev`     | Start dev server (`localhost:4321`) |
+| `npm run build`   | Build to `./dist/`              |
+| `npm run preview` | Preview the production build    |
