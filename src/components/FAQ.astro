@@ -1,0 +1,76 @@
+---
+import type { FaqItem } from '../data/faq';
+
+interface FaqGroup {
+  heading: string;
+  items: FaqItem[];
+}
+
+interface Props {
+  groups: FaqGroup[];
+  eyebrow?: string;
+}
+
+const { groups, eyebrow = 'FAQ' } = Astro.props;
+const allItems = groups.flatMap((g) => g.items);
+---
+
+<section class="section faq-section">
+  <div class="container">
+    <span class="caption-mono section-eyebrow faq-eyebrow">{eyebrow}</span>
+    {groups.map((group) => (
+      <div class="faq-group">
+        <h2 class="display-md faq-group-heading">{group.heading}</h2>
+        <div class="faq-list">
+          {group.items.map((item) => (
+            <details class="faq-item">
+              <summary class="faq-question">{item.question}</summary>
+              <div class="faq-answer" set:html={item.answer} />
+            </details>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+</section>
+
+<script type="application/ld+json" set:html={JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: allItems.map((item) => ({
+    '@type': 'Question',
+    name: item.question,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: item.answer,
+    },
+  })),
+})} />
+
+<style>
+  .faq-section { padding: 80px 0; }
+  .faq-eyebrow { display: block; text-align: center; margin-bottom: 10px; }
+  .faq-group { max-width: 760px; margin: 0 auto 48px; }
+  .faq-group:last-child { margin-bottom: 0; }
+  .faq-group-heading { text-align: center; margin: 0 0 28px; }
+  .faq-list {
+    display: flex; flex-direction: column; gap: 1px;
+    background-color: var(--color-hairline);
+    border: 1px solid var(--color-hairline); border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .faq-item { background-color: var(--color-canvas); padding: 18px 24px; }
+  .faq-question {
+    cursor: pointer; font-weight: 600; color: var(--color-ink);
+    font-size: 15px; list-style: none;
+  }
+  .faq-question::-webkit-details-marker { display: none; }
+  .faq-question::after { content: '+'; float: right; color: var(--color-mute); }
+  details[open] .faq-question::after { content: '−'; }
+  .faq-answer { color: var(--color-body); font-size: 14px; line-height: 1.6; margin-top: 12px; }
+  .faq-answer :global(a) { color: var(--color-link); text-decoration: underline; }
+
+  @media (max-width: 640px) {
+    .faq-item { padding: 16px 18px; }
+  }
+</style>

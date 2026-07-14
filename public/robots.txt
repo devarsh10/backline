@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /cart
+Disallow: /checkout
+Disallow: /order-confirmation
+Disallow: /contact-success
+
+Sitemap: https://amply.in/sitemap-index.xml
