@@ -160,8 +160,8 @@ body {
     0 8px 24px -4px rgba(0,0,0,0.10);
 }
 
-/* ── Amply gradient ── */
-.amply-gradient {
+/* ── Brand gradient ── */
+.brand-gradient {
   background: radial-gradient(ellipse 80% 60% at 50% -10%,
     rgba(0, 124, 240, 0.15) 0%,
     rgba(0, 223, 216, 0.10) 40%,
@@ -173,7 +173,7 @@ body {
   );
 }
 
-.amply-gradient-text {
+.brand-gradient-text {
   background: linear-gradient(135deg, #007cf0, #00dfd8 40%, #7928ca);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

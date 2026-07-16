@@ -7,8 +7,8 @@ export interface CartItem {
   quantity: number;
 }
 
-const CART_KEY = 'amply_cart';
-const LAST_ORDER_KEY = 'amply_last_order';
+const CART_KEY = 'backline_cart';
+const LAST_ORDER_KEY = 'backline_last_order';
 
 export function getCart(): CartItem[] {
   try {
@@ -98,5 +98,5 @@ export function generateOrderRef(): string {
   const now = new Date();
   const date = now.toISOString().slice(0, 10).replace(/-/g, '');
   const rand = Math.floor(1000 + Math.random() * 9000);
-  return `AMPLY-${date}-${rand}`;
+  return `BLI-${date}-${rand}`;
 }

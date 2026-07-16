@@ -1,6 +1,8 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import FAQ from '../../components/FAQ.astro';
 import { categories, getEquipmentByCategory, getCategoryBySlug } from '../../data/equipment';
+import { categoryFaq } from '../../data/faq';
 import type { EquipmentItem } from '../../data/equipment';
 
 export async function getStaticPaths() {
@@ -11,25 +13,47 @@ export async function getStaticPaths() {
 
 const { category } = Astro.params;
 const cat = getCategoryBySlug(category!);
-const allItems = getEquipmentByCategory(category!).filter(i => i.available);
+const allItems = getEquipmentByCategory(category!);
 
-if (!cat) return Astro.redirect('/equipment');
+if (!cat) return Astro.redirect('/');
 
-const isDrums = category === 'drums';
-const items      = isDrums ? allItems.filter(i => i.subcategory !== 'Cymbals') : allItems;
-const cymbalItems = isDrums ? allItems.filter(i => i.subcategory === 'Cymbals') : [];
+// Some categories pull a second subsection out of the main list —
+// Cymbals under Drums, Stage Accessories under Pianos & Keyboards.
+const subsectionConfig: Record<string, { match: (i: EquipmentItem) => boolean; label: string }> = {
+  drums: { match: i => i.subcategory === 'Cymbals', label: 'Cymbals' },
+  keyboards: { match: i => i.subcategory === 'Stage Accessory', label: 'Stage Accessories' },
+};
+const subsection = subsectionConfig[category!];
+const items = subsection ? allItems.filter(i => !subsection.match(i)) : allItems;
+const subsectionItems = subsection ? allItems.filter(i => subsection.match(i)) : [];
 
-// Group by brand, sorted alphabetically
-const brandGroups = items.reduce((acc, item) => {
-  if (!acc[item.brand]) acc[item.brand] = [];
-  acc[item.brand].push(item);
-  return acc;
-}, {} as Record<string, typeof items>);
-const brands = Object.keys(brandGroups).sort();
+// Amplifiers group by their Guitar/Bass/Keyboard subgroup instead of by brand.
+const groupKey: (i: EquipmentItem) => string =
+  category === 'amplifiers' ? (i => i.subcategory) : (i => i.brand);
+
+function groupAndSort(list: EquipmentItem[]) {
+  const groups = list.reduce((acc, item) => {
+    const key = groupKey(item);
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(item);
+    return acc;
+  }, {} as Record<string, EquipmentItem[]>);
+  Object.values(groups).forEach(g => g.sort((a, b) => Number(b.available) - Number(a.available)));
+  return groups;
+}
+
+const groups = groupAndSort(items);
+
+// Fixed subgroup order for amplifiers; alphabetical brand order everywhere else.
+const groupOrder: Record<string, string[]> = {
+  amplifiers: ['Guitar Amplifiers & Cabinets', 'Bass Amplifiers & Cabinets', 'Keyboard Amplifiers & Cabinets'],
+};
+const groupNames = groupOrder[category!]
+  ? groupOrder[category!].filter(name => groups[name])
+  : Object.keys(groups).sort();
 
 const heroImages: Record<string, string> = {
   drums:      '/images/drum&cymbals.jpg',
-  guitars:    '/images/guitar&bass-guitar.jpg',
   amplifiers: '/images/guitar-amplifiers-cabinets.jpg',
   keyboards:  '/images/keyboards-synths-and-accessories.jpg',
   percussion: '/images/percussion.jpg',
@@ -39,19 +63,19 @@ const img = heroImages[category!];
 const heroBg = img
   ? `background-image: linear-gradient(rgba(0,0,0,0.52), rgba(0,0,0,0.62)), url('${img}'); background-size: cover; background-position: center;`
   : `background: linear-gradient(160deg, #0a0f08 0%, #161f10 60%, #0a0f08 100%);`;
+
+const faqItems = categoryFaq[category!] ?? [];
 ---
 
 <Layout
   title={cat.name}
-  description={`Rent professional ${cat.name.toLowerCase()} in India. ${cat.description}`}
+  description={`Rent professional ${cat.name.toLowerCase()} across Gujarat. ${cat.description}`}
 >
   <!-- Hero banner -->
   <div class="cat-hero" style={heroBg}>
     <div class="cat-hero-inner">
       <nav class="hero-breadcrumb" aria-label="Breadcrumb">
         <a href="/" class="hero-bc-link">Home</a>
-        <span class="hero-bc-sep">/</span>
-        <a href="/equipment" class="hero-bc-link">Rental Equipment</a>
         <span class="hero-bc-sep">/</span>
         <span class="hero-bc-current">{cat.name}</span>
       </nav>
@@ -61,7 +85,7 @@ const heroBg = img
 
   <!-- Items -->
   <div class="page-container">
-    {items.length === 0 ? (
+    {items.length === 0 && subsectionItems.length === 0 ? (
       <div class="empty-state">
         <h2 class="display-sm">Coming soon.</h2>
         <p style="color: var(--color-body); margin: 0 0 20px;">Contact us for current availability.</p>
@@ -70,18 +94,18 @@ const heroBg = img
     ) : (
       <>
         <div class="brands-container">
-          {brands.map(brand => (
+          {groupNames.map(groupName => (
             <div class="brand-section">
               <div class="brand-header">
-                <h2 class="brand-title">{brand}</h2>
+                <h2 class="brand-title">{groupName}</h2>
                 <span class="brand-rule"></span>
               </div>
               <div class="items-grid">
-                {brandGroups[brand].map(item => {
+                {groups[groupName].map(item => {
                   const preview = item.included.slice(0, 4).join(' • ');
                   const hasMore = item.included.length > 4;
                   return (
-                    <div class="item-card">
+                    <div class={`item-card ${!item.available ? 'item-card--unavailable' : ''}`}>
                       <a href={`/equipment/${item.category}/${item.slug}`} class="card-img-link">
                         <div class="card-img">
                           {item.image ? (
@@ -93,7 +117,9 @@ const heroBg = img
                               </svg>
                             </div>
                           )}
-                          {item.featured && <span class="card-badge">Popular</span>}
+                          {!item.available ? (
+                            <span class="unavail-badge">Unavailable</span>
+                          ) : item.featured && <span class="card-badge">Popular</span>}
                         </div>
                       </a>
                       <div class="card-body">
@@ -117,18 +143,18 @@ const heroBg = img
           ))}
         </div>
 
-        {isDrums && cymbalItems.length > 0 && (
+        {subsection && subsectionItems.length > 0 && (
           <div class="cymbal-section">
             <div class="brand-header">
-              <h2 class="brand-title">Cymbals</h2>
+              <h2 class="brand-title">{subsection.label}</h2>
               <span class="brand-rule"></span>
             </div>
             <div class="items-grid">
-              {cymbalItems.map(item => {
+              {subsectionItems.map(item => {
                 const preview = item.included.slice(0, 4).join(' • ');
                 const hasMore = item.included.length > 4;
                 return (
-                  <div class="item-card">
+                  <div class={`item-card ${!item.available ? 'item-card--unavailable' : ''}`}>
                     <a href={`/equipment/${item.category}/${item.slug}`} class="card-img-link">
                       <div class="card-img">
                         <div class="card-img-placeholder">
@@ -136,6 +162,7 @@ const heroBg = img
                             <path d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/>
                           </svg>
                         </div>
+                        {!item.available && <span class="unavail-badge">Unavailable</span>}
                       </div>
                     </a>
                     <div class="card-body">
@@ -160,6 +187,10 @@ const heroBg = img
       </>
     )}
   </div>
+
+  {faqItems.length > 0 && (
+    <FAQ eyebrow="FAQ" groups={[{ heading: `${cat.name} FAQ`, items: faqItems }]} />
+  )}
 </Layout>
 
 <style>
@@ -223,6 +254,7 @@ const heroBg = img
     box-shadow: 0 6px 24px rgba(0,0,0,0.30);
     transform: translateY(-2px);
   }
+  .item-card--unavailable { opacity: 0.62; }
 
   /* Card image */
   .card-img-link { display: block; }
@@ -239,6 +271,12 @@ const heroBg = img
     background: var(--color-canvas-soft-2); color: var(--color-ink);
     border: 1px solid var(--color-hairline-strong);
     font-size: 10px; font-weight: 500; padding: 2px 8px;
+    border-radius: 99px; letter-spacing: 0.03em;
+  }
+  .unavail-badge {
+    position: absolute; top: 10px; left: 10px;
+    background: #d4a017; color: #fff;
+    font-size: 10px; font-weight: 600; padding: 2px 8px;
     border-radius: 99px; letter-spacing: 0.03em;
   }
 

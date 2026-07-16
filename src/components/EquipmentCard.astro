@@ -9,7 +9,7 @@ interface Props {
 const { item, compact = false } = Astro.props;
 ---
 
-<div class={`gear-card ${compact ? 'gear-card--compact' : ''}`}>
+<div class={`gear-card ${compact ? 'gear-card--compact' : ''} ${!item.available ? 'gear-card--unavailable' : ''}`}>
   <!-- Image -->
   <a href={`/equipment/${item.category}/${item.slug}`} class="gear-card-img-link" tabindex="-1" aria-hidden="true">
     <div class="gear-card-img">
@@ -22,7 +22,9 @@ const { item, compact = false } = Astro.props;
           </svg>
         </div>
       )}
-      {item.featured && <span class="gear-featured-badge">Featured</span>}
+      {!item.available ? (
+        <span class="gear-unavail-badge">Unavailable</span>
+      ) : item.featured && <span class="gear-featured-badge">Featured</span>}
     </div>
   </a>
 
@@ -37,17 +39,21 @@ const { item, compact = false } = Astro.props;
     </a>
     <div class="gear-card-footer">
       <span class="gear-price">₹{item.pricePerDay.toLocaleString('en-IN')}<span class="gear-price-unit">/day</span></span>
-      <button
-        class="add-to-cart-btn"
-        data-slug={item.slug}
-        data-name={item.name}
-        data-brand={item.brand}
-        data-category={item.category}
-        data-price={item.pricePerDay}
-        aria-label={`Add ${item.name} to cart`}
-      >
-        + Add
-      </button>
+      {item.available ? (
+        <button
+          class="add-to-cart-btn"
+          data-slug={item.slug}
+          data-name={item.name}
+          data-brand={item.brand}
+          data-category={item.category}
+          data-price={item.pricePerDay}
+          aria-label={`Add ${item.name} to cart`}
+        >
+          + Add
+        </button>
+      ) : (
+        <span class="unavail-pill">Unavailable</span>
+      )}
     </div>
   </div>
 </div>
@@ -86,6 +92,17 @@ const { item, compact = false } = Astro.props;
     background-color: var(--color-ink); color: var(--color-on-primary);
     font-size: 10px; font-weight: 500; padding: 2px 8px;
     border-radius: var(--radius-full);
+  }
+  .gear-unavail-badge {
+    position: absolute; top: 8px; left: 8px;
+    background-color: #d4a017; color: #fff;
+    font-size: 10px; font-weight: 600; padding: 2px 8px;
+    border-radius: var(--radius-full);
+  }
+  .gear-card--unavailable { opacity: 0.62; }
+  .unavail-pill {
+    font-size: 11px; font-weight: 600; color: #d4a017;
+    white-space: nowrap; flex-shrink: 0;
   }
   .gear-card-body {
     padding: 14px;

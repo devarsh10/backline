@@ -4,4 +4,4 @@ Disallow: /checkout
 Disallow: /order-confirmation
 Disallow: /contact-success
 
-Sitemap: https://amply.in/sitemap-index.xml
+Sitemap: https://backlineindia.com/sitemap-index.xml

@@ -1,6 +1,6 @@
-# Amply
+# Backline India
 
-Music gear rental site for events, concerts, and studios in India — browse equipment, add to cart, and checkout with no account needed. Built with [Astro](https://astro.build) + Tailwind CSS.
+Backline rental site for events, concerts, and studios across Gujarat — browse equipment, add to cart, and checkout with no account needed. Built with [Astro](https://astro.build) + Tailwind CSS.
 
 ![Home page](docs/screenshots/home.png)
 

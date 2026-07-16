@@ -1,31 +1,33 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import EquipmentCard from '../components/EquipmentCard.astro';
+import FAQ from '../components/FAQ.astro';
 import { categories, getFeaturedEquipment } from '../data/equipment';
+import { generalFaq, paymentFaq } from '../data/faq';
 
 const featured = getFeaturedEquipment();
 ---
 
 <Layout
-  title="Music Gear Rental in India"
-  description="Rent professional amplifiers, drums, keyboards, PA systems, and more for concerts, events, and studios across India. Transparent pricing, no account required."
+  title="Backline Rental in Gujarat"
+  description="Rent professional drum kits, cymbals, amplifiers, and digital pianos for concerts, events, and studios across Gujarat. Transparent pricing, no account required."
 >
   <!-- ── Hero ── -->
   <section class="hero">
     <div class="hero-bg" aria-hidden="true"></div>
     <div class="container hero-inner">
       <div class="hero-badge">
-        <span class="caption-mono">India's premium gear rental</span>
+        <span class="caption-mono">Gujarat's premium backline rental</span>
       </div>
       <h1 class="display-xl hero-headline">
-        Professional music gear,<br />
-        <span class="amply-gradient-text">ready when you play.</span>
+        Professional backline,<br />
+        <span class="brand-gradient-text">ready when you play.</span>
       </h1>
       <p class="body-lg hero-sub">
-        Rent amplifiers, drums, keyboards, PA systems, and full stage rigs for concerts, events, and studios. Transparent pricing, no hidden costs.
+        Rent drum kits, cymbals, amplifiers, and digital pianos for concerts, events, and studios across Gujarat. Transparent pricing, no hidden costs.
       </p>
       <div class="hero-cta-row">
-        <a href="/equipment" class="btn-primary">Browse Equipment</a>
+        <a href="/#categories" class="btn-primary">Browse Equipment</a>
       </div>
       <div class="hero-trust-row">
         <span class="hero-trust-item">
@@ -54,7 +56,7 @@ const featured = getFeaturedEquipment();
   </section>
 
   <!-- ── Categories ── -->
-  <section class="section">
+  <section class="section" id="categories">
     <div class="container">
       <div class="section-header">
         <span class="caption-mono section-eyebrow">Browse by category</span>
@@ -93,7 +95,7 @@ const featured = getFeaturedEquipment();
       </div>
 
       <div style="text-align: center; margin-top: 40px;">
-        <a href="/equipment" class="btn-secondary">View all equipment →</a>
+        <a href="/#categories" class="btn-secondary">View all equipment →</a>
       </div>
     </div>
   </section>
@@ -153,12 +155,20 @@ const featured = getFeaturedEquipment();
           <p class="body-lg cta-band-sub">Tell us your event type and lineup — we'll suggest the right package. Or just browse and build your cart — it only takes a few minutes.</p>
         </div>
         <div class="cta-band-actions">
-          <a href="/equipment" class="btn-primary">Browse equipment</a>
+          <a href="/#categories" class="btn-primary">Browse equipment</a>
           <a href="/contact" class="btn-secondary">Talk to us</a>
         </div>
       </div>
     </div>
   </section>
+
+  <FAQ
+    eyebrow="Questions"
+    groups={[
+      { heading: 'Renting from Backline India', items: generalFaq },
+      { heading: 'Payment & delivery', items: paymentFaq },
+    ]}
+  />
 </Layout>
 
 <style>

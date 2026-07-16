@@ -12,12 +12,12 @@ interface Props {
 
 const {
   title,
-  description = 'Professional music gear rental for musicians, bands, studios, and events across India. Amplifiers, drums, keyboards, PA systems, and more.',
+  description = 'Professional backline rental across Gujarat — drum kits, cymbals, amplifiers, digital pianos, and keyboards for concerts, events, and studios. Transparent pricing, no account required.',
   ogImage = '/og-default.jpg',
   noIndex = false,
 } = Astro.props;
 
-const canonical = new URL(Astro.url.pathname, Astro.site || 'https://amply.in').href;
+const canonical = new URL(Astro.url.pathname, Astro.site || 'https://backlineindia.com').href;
 ---
 
 <!doctype html>
@@ -30,20 +30,20 @@ const canonical = new URL(Astro.url.pathname, Astro.site || 'https://amply.in').
     <link rel="icon" href="/favicon.ico" />
     <link rel="canonical" href={canonical} />
 
-    <title>{title} — Amply</title>
+    <title>{title} — Backline India</title>
     <meta name="description" content={description} />
     {noIndex && <meta name="robots" content="noindex" />}
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonical} />
-    <meta property="og:title" content={`${title} — Amply`} />
+    <meta property="og:title" content={`${title} — Backline India`} />
     <meta property="og:description" content={description} />
     <meta property="og:image" content={ogImage} />
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content={`${title} — Amply`} />
+    <meta name="twitter:title" content={`${title} — Backline India`} />
     <meta name="twitter:description" content={description} />
 
     <!-- Fonts -->
@@ -54,16 +54,30 @@ const canonical = new URL(Astro.url.pathname, Astro.site || 'https://amply.in').
       rel="stylesheet"
     />
 
-    <!-- Structured data: Organization -->
+    <!-- Structured data: LocalBusiness -->
     <script type="application/ld+json" set:html={JSON.stringify({
       "@context": "https://schema.org",
-      "@type": "Organization",
-      "name": "Amply",
-      "description": "Professional music gear rental across India",
-      "url": "https://amply.in",
+      "@type": "MusicStore",
+      "name": "Backline India",
+      "description": "Professional backline and music equipment rental serving musicians, bands, studios, and events across Gujarat.",
+      "url": "https://backlineindia.com",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Ahmedabad",
+        "addressRegion": "Gujarat",
+        "addressCountry": "IN"
+      },
+      "areaServed": [
+        { "@type": "State", "name": "Gujarat" },
+        { "@type": "City", "name": "Ahmedabad" },
+        { "@type": "City", "name": "Surat" },
+        { "@type": "City", "name": "Vadodara" },
+        { "@type": "City", "name": "Rajkot" },
+        { "@type": "City", "name": "Gandhinagar" }
+      ],
       "contactPoint": {
         "@type": "ContactPoint",
-        "telephone": "+91-99999-99999",
+        "telephone": "+91-7600-393-515",
         "contactType": "customer service",
         "areaServed": "IN"
       }

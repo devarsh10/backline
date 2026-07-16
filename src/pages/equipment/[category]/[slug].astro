@@ -27,8 +27,6 @@ const relatedItems = equipment
     <nav class="breadcrumb" aria-label="Breadcrumb">
       <a href="/" class="bc-link">Home</a>
       <span class="bc-sep" aria-hidden="true">/</span>
-      <a href="/equipment" class="bc-link">Rental Equipment</a>
-      <span class="bc-sep" aria-hidden="true">/</span>
       <a href={`/equipment/${item.category}`} class="bc-link">{cat?.name}</a>
       <span class="bc-sep" aria-hidden="true">/</span>
       <span class="bc-current" aria-current="page">{item.name}</span>
@@ -52,6 +50,9 @@ const relatedItems = equipment
           )}
           {item.featured && <span class="featured-badge">Popular</span>}
         </div>
+        {item.image && (
+          <p class="image-disclaimer">Illustrative photo sourced from the manufacturer/retailer site for demonstration only — not our actual rental unit.</p>
+        )}
       </div>
 
       <!-- RIGHT: All details -->
@@ -101,20 +102,29 @@ const relatedItems = equipment
           </div>
 
           <!-- Add to cart -->
-          <button
-            class="btn-primary add-btn"
-            id="sidebar-add-to-cart"
-            data-slug={item.slug}
-            data-name={item.name}
-            data-brand={item.brand}
-            data-category={item.category}
-            data-price={item.pricePerDay}
-          >
-            Add to Cart
-          </button>
-          <a href="/cart" class="btn-secondary view-cart-btn" style="display:none;" id="view-cart-link">
-            View Cart →
-          </a>
+          {item.available ? (
+            <>
+              <button
+                class="btn-primary add-btn"
+                id="sidebar-add-to-cart"
+                data-slug={item.slug}
+                data-name={item.name}
+                data-brand={item.brand}
+                data-category={item.category}
+                data-price={item.pricePerDay}
+              >
+                Add to Cart
+              </button>
+              <a href="/cart" class="btn-secondary view-cart-btn" style="display:none;" id="view-cart-link">
+                View Cart →
+              </a>
+            </>
+          ) : (
+            <>
+              <button class="btn-primary add-btn unavailable-btn" disabled>Currently Unavailable</button>
+              <a href="/contact" class="btn-secondary view-cart-btn">Ask about restock →</a>
+            </>
+          )}
 
           <!-- Trust -->
           <div class="trust-list">
@@ -122,10 +132,12 @@ const relatedItems = equipment
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
               Professional crew delivers &amp; sets up at your venue
             </div>
-            <div class="trust-row">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-              All lines tested — plug and play when you arrive
-            </div>
+            {(item.category === 'amplifiers' || item.category === 'keyboards') && (
+              <div class="trust-row">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                All lines tested — plug and play when you arrive
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -207,6 +219,10 @@ const relatedItems = equipment
 
   /* Image column */
   .product-image-col {}
+  .image-disclaimer {
+    font-size: 11px; color: var(--color-mute); line-height: 1.5;
+    margin: 8px 4px 0;
+  }
   .product-image-frame {
     background-color: var(--color-canvas-soft-2);
     border: 1px solid var(--color-hairline); border-radius: var(--radius-lg);
@@ -274,7 +290,8 @@ const relatedItems = equipment
 
   /* Buttons */
   .add-btn { width: 100%; justify-content: center; font-size: 15px; padding: 12px; margin-bottom: 8px; }
-  .view-cart-btn { width: 100%; justify-content: center; margin-bottom: 20px; }
+  .unavailable-btn { opacity: 0.5; cursor: not-allowed; }
+  .view-cart-btn { width: 100%; justify-content: center; margin-bottom: 20px; display: flex; }
 
   /* Trust */
   .trust-list { display: flex; flex-direction: column; gap: 8px; }

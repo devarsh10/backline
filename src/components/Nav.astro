@@ -1,13 +1,14 @@
 ---
+import { equipment } from '../data/equipment';
+
 const currentPath = Astro.url.pathname;
 
 const navCategories = [
-  { href: '/equipment/drums',       label: 'Drums & Cymbals' },
-  { href: '/equipment/guitars',     label: 'Guitars & Bass Guitars' },
-  { href: '/equipment/amplifiers',  label: 'Guitar Amplifiers & Cabinets' },
-  { href: '/equipment/keyboards',   label: 'Keyboards, Synths & Accessories' },
-  { href: '/equipment/percussion',  label: 'Percussion' },
-  { href: '/equipment/accessories', label: 'Miscellaneous Accessories' },
+  { href: '/equipment/drums',             label: 'Drum Kits & Cymbals' },
+  { href: '/equipment/drum-accessories',  label: 'Drum Accessories' },
+  { href: '/equipment/amplifiers',        label: 'Amplifiers & Cabinets' },
+  { href: '/equipment/keyboards',         label: 'Pianos & Keyboards' },
+  { href: '/equipment/percussion',        label: 'Percussion' },
 ];
 
 function isActive(href: string) {
@@ -16,24 +17,29 @@ function isActive(href: string) {
 }
 
 const equipmentActive = currentPath.startsWith('/equipment');
+
+// Lightweight catalogue index for the client-side global search.
+const searchIndex = equipment.map(({ slug, name, brand, category, subcategory, pricePerDay, available, featured, image }) => (
+  { slug, name, brand, category, subcategory, pricePerDay, available, featured, image }
+));
 ---
 
 <header class="nav-bar" id="site-nav">
   <div class="nav-inner">
     <!-- Logo -->
-    <a href="/" class="nav-logo" aria-label="Amply — Home">
-      <span class="nav-logo-mark">A</span>
-      <span class="nav-logo-text">Amply</span>
+    <a href="/" class="nav-logo" aria-label="Backline India — Home">
+      <span class="nav-logo-mark">B</span>
+      <span class="nav-logo-text">Backline India</span>
     </a>
 
     <!-- Desktop links -->
     <nav class="nav-links" aria-label="Main navigation">
       <!-- Equipment dropdown -->
-      <div class="nav-dropdown-group">
-        <a href="/equipment" class={`nav-link nav-dropdown-trigger ${equipmentActive ? 'active' : ''}`}>
+      <div class="nav-dropdown-group" id="nav-dropdown-group">
+        <button type="button" class={`nav-link nav-dropdown-trigger ${equipmentActive ? 'active' : ''}`} id="nav-dropdown-trigger" aria-expanded="false" aria-haspopup="true">
           Rental Equipment
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="chevron" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
-        </a>
+        </button>
         <div class="nav-dropdown-menu" role="menu">
           <div class="nav-dropdown-menu-inner">
             {navCategories.map(cat => (
@@ -50,6 +56,27 @@ const equipmentActive = currentPath.startsWith('/equipment');
 
     <!-- Right cluster -->
     <div class="nav-cta-cluster">
+      <!-- Global search -->
+      <div class="nav-search" id="nav-search">
+        <script id="nav-search-data" type="application/json" set:html={JSON.stringify(searchIndex)} />
+        <button type="button" class="nav-search-toggle" id="nav-search-toggle" aria-label="Search equipment">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </button>
+        <div class="nav-search-box">
+          <svg class="nav-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input
+            type="search"
+            id="nav-search-input"
+            class="nav-search-input"
+            placeholder="Search equipment…"
+            autocomplete="off"
+            spellcheck="false"
+            aria-label="Search equipment"
+          />
+        </div>
+        <div class="nav-search-results" id="nav-search-results"></div>
+      </div>
+
       <a href="/contact" class="btn-secondary btn-sm">Contact</a>
 
       <!-- Cart button -->
@@ -118,9 +145,11 @@ const equipmentActive = currentPath.startsWith('/equipment');
   .nav-dropdown-group { position: relative; }
   .nav-dropdown-trigger {
     display: flex; align-items: center; gap: 4px;
+    background: none; border: none; cursor: pointer; font-family: var(--font-sans);
   }
   .chevron { transition: transform 0.18s; }
-  .nav-dropdown-group:hover .chevron { transform: rotate(180deg); }
+  .nav-dropdown-group:hover .chevron,
+  .nav-dropdown-group.open .chevron { transform: rotate(180deg); }
 
   .nav-dropdown-menu {
     position: absolute; top: 100%; left: 0;
@@ -137,7 +166,8 @@ const equipmentActive = currentPath.startsWith('/equipment');
     padding: 6px;
   }
   .nav-dropdown-group:hover .nav-dropdown-menu,
-  .nav-dropdown-group:focus-within .nav-dropdown-menu {
+  .nav-dropdown-group:focus-within .nav-dropdown-menu,
+  .nav-dropdown-group.open .nav-dropdown-menu {
     opacity: 1; pointer-events: auto;
   }
   .nav-dropdown-item {
@@ -160,6 +190,71 @@ const equipmentActive = currentPath.startsWith('/equipment');
   .nav-link.active { color: var(--color-ink); font-weight: 500; }
 
   .nav-cta-cluster { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-shrink: 0; }
+
+  /* Global search */
+  .nav-search { position: relative; display: flex; align-items: center; }
+  .nav-search-toggle {
+    display: none; background: none; border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-sm); padding: 7px; cursor: pointer; color: var(--color-body);
+    line-height: 0;
+  }
+  .nav-search-box {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-full);
+    padding: 0 10px; width: 190px; height: 34px;
+    transition: border-color 0.15s, width 0.15s, background-color 0.15s;
+  }
+  .nav-search-box:focus-within {
+    border-color: var(--color-hairline-strong);
+    background-color: rgba(255,255,255,0.10);
+    width: 240px;
+  }
+  .nav-search-icon { color: var(--color-mute); flex-shrink: 0; }
+  .nav-search-input {
+    flex: 1; min-width: 0; border: none; outline: none; background: transparent;
+    font-size: 13px; color: var(--color-ink); font-family: var(--font-sans);
+  }
+  .nav-search-input::placeholder { color: var(--color-mute); }
+  .nav-search-input::-webkit-search-cancel-button { display: none; }
+
+  .nav-search-results {
+    display: none;
+    position: absolute; top: 100%; right: 0; margin-top: 8px;
+    width: 340px; max-height: 420px; overflow-y: auto;
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-md);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.16);
+    z-index: 200; padding: 6px;
+  }
+  .nav-search-results.open { display: block; }
+
+  :global(.nsr-meta) { font-size: 11px; color: var(--color-mute); padding: 6px 8px 4px; }
+  :global(.nsr-item) {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px; border-radius: var(--radius-sm);
+    text-decoration: none; color: inherit;
+  }
+  :global(.nsr-item:hover) { background-color: var(--color-canvas-soft-2); }
+  :global(.nsr-thumb) {
+    width: 40px; height: 40px; flex-shrink: 0; border-radius: var(--radius-sm);
+    background-color: var(--color-canvas-soft-2);
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  :global(.nsr-thumb img) { width: 100%; height: 100%; object-fit: cover; }
+  :global(.nsr-info) { flex: 1; min-width: 0; }
+  :global(.nsr-name) {
+    font-size: 13px; font-weight: 500; color: var(--color-ink);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  :global(.nsr-sub) { font-size: 11px; color: var(--color-mute); }
+  :global(.nsr-price) { font-size: 12px; font-weight: 600; color: var(--color-ink); flex-shrink: 0; }
+  :global(.nsr-unavail) { font-size: 10px; font-weight: 600; color: #d4a017; flex-shrink: 0; }
+  :global(.nsr-empty) { padding: 20px 12px; text-align: center; font-size: 13px; color: var(--color-mute); }
+  :global(.nsr-empty a) { color: var(--color-link); }
+
   .nav-cart-btn {
     position: relative; display: flex; align-items: center; justify-content: center;
     width: 36px; height: 36px;
@@ -206,11 +301,23 @@ const equipmentActive = currentPath.startsWith('/equipment');
     .nav-cta-cluster .btn-secondary { display: none; }
     .nav-menu-btn { display: flex; }
   }
-  @media (max-width: 480px) { .nav-inner { padding: 0 16px; } }
+  @media (max-width: 640px) {
+    .nav-inner { padding: 0 16px; }
+    .nav-search-toggle { display: flex; align-items: center; justify-content: center; }
+    .nav-search-box { display: none; }
+    .nav-search.open .nav-search-box {
+      display: flex; position: absolute; top: 44px; right: 0; width: 260px;
+      background-color: var(--color-canvas); z-index: 210;
+    }
+    .nav-search.open .nav-search-toggle { display: none; }
+    .nav-search-results { width: 280px; right: -8px; }
+  }
 </style>
 
 <script>
   import { updateCartBadge } from '../scripts/cart';
+  import { searchItems, type SearchableItem } from '../scripts/search';
+
   updateCartBadge();
 
   const btn = document.getElementById('nav-menu-btn');
@@ -219,5 +326,88 @@ const equipmentActive = currentPath.startsWith('/equipment');
     const open = menu?.classList.toggle('open');
     btn.setAttribute('aria-expanded', String(open));
     menu?.setAttribute('aria-hidden', String(!open));
+  });
+
+  // Equipment dropdown — hover works via CSS; this handles tap/click for touch + keyboard.
+  const dropdownGroup = document.getElementById('nav-dropdown-group');
+  const dropdownTrigger = document.getElementById('nav-dropdown-trigger');
+  dropdownTrigger?.addEventListener('click', () => {
+    const isOpen = dropdownGroup?.classList.toggle('open');
+    dropdownTrigger.setAttribute('aria-expanded', String(isOpen));
+  });
+  document.addEventListener('click', (e) => {
+    if (dropdownGroup && !dropdownGroup.contains(e.target as Node)) {
+      dropdownGroup.classList.remove('open');
+      dropdownTrigger?.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  // Global search
+  const allItems: SearchableItem[] = JSON.parse(
+    document.getElementById('nav-search-data')!.textContent!
+  );
+
+  const searchWrap = document.getElementById('nav-search')!;
+  const searchToggle = document.getElementById('nav-search-toggle');
+  const searchInput = document.getElementById('nav-search-input') as HTMLInputElement;
+  const resultsEl = document.getElementById('nav-search-results')!;
+
+  function esc(s: string) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function renderResults(query: string) {
+    if (!query.trim()) { resultsEl.classList.remove('open'); resultsEl.innerHTML = ''; return; }
+
+    const matches = searchItems(allItems, query, 8);
+
+    if (matches.length === 0) {
+      resultsEl.innerHTML = `
+        <div class="nsr-empty">
+          No matches for "${esc(query)}" —
+          <a href="/contact">ask us about it</a>
+        </div>`;
+      resultsEl.classList.add('open');
+      return;
+    }
+
+    resultsEl.innerHTML = `
+      <div class="nsr-meta">${matches.length} result${matches.length !== 1 ? 's' : ''}</div>
+      ${matches.map(item => {
+        const thumb = item.image
+          ? `<img src="${esc(item.image)}" alt="" loading="lazy" />`
+          : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.25"><path d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/></svg>`;
+        return `
+          <a class="nsr-item" href="/equipment/${esc(item.category)}/${esc(item.slug)}">
+            <span class="nsr-thumb">${thumb}</span>
+            <span class="nsr-info">
+              <span class="nsr-name">${esc(item.name)}</span>
+              <span class="nsr-sub">${esc(item.brand)} · ${esc(item.subcategory)}</span>
+            </span>
+            ${item.available
+              ? `<span class="nsr-price">₹${item.pricePerDay.toLocaleString('en-IN')}/day</span>`
+              : `<span class="nsr-unavail">Unavailable</span>`}
+          </a>`;
+      }).join('')}
+    `;
+    resultsEl.classList.add('open');
+  }
+
+  let debounceTimer: ReturnType<typeof setTimeout>;
+  searchInput?.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => renderResults(searchInput.value), 150);
+  });
+
+  searchToggle?.addEventListener('click', () => {
+    searchWrap.classList.toggle('open');
+    if (searchWrap.classList.contains('open')) searchInput?.focus();
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!searchWrap.contains(e.target as Node)) {
+      resultsEl.classList.remove('open');
+      if (window.innerWidth <= 640) searchWrap.classList.remove('open');
+    }
   });
 </script>
