@@ -63,11 +63,16 @@ export interface OrderRow {
   razorpay_order_id: string | null;
   status: string;
   total_amount: number;
+  customer_name: string;
+  customer_email: string;
 }
 
 export async function getOrderByRef(db: D1Database, orderRef: string): Promise<OrderRow | null> {
   const row = await db
-    .prepare(`SELECT order_ref, razorpay_order_id, status, total_amount FROM orders WHERE order_ref = ?`)
+    .prepare(
+      `SELECT order_ref, razorpay_order_id, status, total_amount, customer_name, customer_email
+       FROM orders WHERE order_ref = ?`
+    )
     .bind(orderRef)
     .first<OrderRow>();
   return row ?? null;

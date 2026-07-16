@@ -13,6 +13,10 @@
       "database_id": "773e109d-ce9c-48cf-a6a7-848d7232e633"
     }
   ],
+  "vars": {
+    "EMAIL_ENABLED": "false",
+    "RESEND_FROM_EMAIL": "Backline India <onboarding@resend.dev>"
+  },
   "observability": {
     "enabled": true
   }

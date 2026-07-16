@@ -1,2 +1,6 @@
 RAZORPAY_KEY_ID=rzp_test_xxxxxxxxxxxxxx
 RAZORPAY_KEY_SECRET=xxxxxxxxxxxxxxxxxxxxxxxx
+
+# Email sending stays off until EMAIL_ENABLED is set to "true" in wrangler.jsonc
+# and a real RESEND_API_KEY is provided here (or via `wrangler secret put`).
+RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxx

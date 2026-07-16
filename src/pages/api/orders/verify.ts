@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
 import { getOrderByRef, markOrderPaid } from '../../../lib/db';
 import { verifyPaymentSignature } from '../../../lib/razorpay';
+import { sendEmail, paymentReceivedEmailHtml } from '../../../lib/email';
 
 export const prerender = false;
 
@@ -42,6 +43,13 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   await markOrderPaid(env.DB, order_ref, razorpay_payment_id);
+
+  await sendEmail(
+    env,
+    order.customer_email,
+    `Payment received — order ${order_ref}`,
+    paymentReceivedEmailHtml(order_ref, order.customer_name, order.total_amount)
+  );
 
   return new Response(JSON.stringify({ ok: true, order_ref, status: 'payment_received' }), {
     headers: { 'content-type': 'application/json' },
