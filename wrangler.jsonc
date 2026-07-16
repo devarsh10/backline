@@ -6,6 +6,13 @@
     "directory": "./dist",
     "binding": "ASSETS"
   },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "hem-backline-db",
+      "database_id": "773e109d-ce9c-48cf-a6a7-848d7232e633"
+    }
+  ],
   "observability": {
     "enabled": true
   }
