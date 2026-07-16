@@ -57,3 +57,29 @@ export async function setRazorpayOrderId(db: D1Database, orderRef: string, razor
     .bind(razorpayOrderId, orderRef)
     .run();
 }
+
+export interface OrderRow {
+  order_ref: string;
+  razorpay_order_id: string | null;
+  status: string;
+  total_amount: number;
+}
+
+export async function getOrderByRef(db: D1Database, orderRef: string): Promise<OrderRow | null> {
+  const row = await db
+    .prepare(`SELECT order_ref, razorpay_order_id, status, total_amount FROM orders WHERE order_ref = ?`)
+    .bind(orderRef)
+    .first<OrderRow>();
+  return row ?? null;
+}
+
+export async function markOrderPaid(db: D1Database, orderRef: string, razorpayPaymentId: string): Promise<void> {
+  await db
+    .prepare(
+      `UPDATE orders
+       SET status = 'payment_received', razorpay_payment_id = ?, paid_at = datetime('now'), updated_at = datetime('now')
+       WHERE order_ref = ? AND status != 'payment_received'`
+    )
+    .bind(razorpayPaymentId, orderRef)
+    .run();
+}

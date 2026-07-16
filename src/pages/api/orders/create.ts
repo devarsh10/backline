@@ -61,6 +61,10 @@ export const POST: APIRoute = async ({ request }) => {
         razorpay_order_id: razorpayOrder.id,
         amount_paise: razorpayOrder.amount,
         key_id: env.RAZORPAY_KEY_ID,
+        days: pricing.days,
+        subtotal_per_day: pricing.subtotalPerDay,
+        discount_pct: pricing.discountPct,
+        discount_amount: pricing.discountAmount,
         total_amount: pricing.totalAmount,
       }),
       { headers: { 'content-type': 'application/json' } }

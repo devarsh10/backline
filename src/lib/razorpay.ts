@@ -38,3 +38,25 @@ export async function createRazorpayOrder(
 
   return response.json();
 }
+
+export async function verifyPaymentSignature(
+  razorpayOrderId: string,
+  razorpayPaymentId: string,
+  signature: string,
+  keySecret: string
+): Promise<boolean> {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(keySecret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const mac = await crypto.subtle.sign(
+    'HMAC',
+    key,
+    new TextEncoder().encode(`${razorpayOrderId}|${razorpayPaymentId}`)
+  );
+  const expected = [...new Uint8Array(mac)].map((b) => b.toString(16).padStart(2, '0')).join('');
+  return expected === signature;
+}

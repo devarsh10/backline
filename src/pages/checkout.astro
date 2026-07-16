@@ -88,13 +88,13 @@ import Layout from '../layouts/Layout.astro';
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="payment-icon"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
             <div>
               <p class="payment-info-title">How payment works</p>
-              <p class="payment-info-desc">After you place your order, we'll confirm your booking within 2 hours and share UPI / bank transfer details for payment. No card details needed now.</p>
+              <p class="payment-info-desc">Pay securely online via card, UPI, or netbanking through Razorpay. Your booking is confirmed as soon as payment succeeds.</p>
             </div>
           </div>
         </section>
 
         <button type="button" class="btn-primary place-order-btn" id="place-order-btn">
-          Place Order
+          Pay & Place Order
         </button>
         <p class="order-footnote">By placing an order you agree to our <a href="/terms" class="inline-link">terms of service</a>.</p>
       </div>
@@ -222,8 +222,8 @@ import Layout from '../layouts/Layout.astro';
 
 <script>
   import {
-    getCart, clearCart, saveLastOrder, generateOrderRef,
-    getCartSubtotalPerDay, getDiscountForDays, formatPrice, updateCartBadge
+    getCart, clearCart, saveLastOrder,
+    getCartSubtotalPerDay, getDiscountForDays, updateCartBadge
   } from '../scripts/cart';
 
   const cart = getCart();
@@ -311,6 +311,17 @@ import Layout from '../layouts/Layout.astro';
   dateTo.min = today;
   dateFrom.addEventListener('change', () => { dateTo.min = dateFrom.value; });
 
+  declare global {
+    interface Window {
+      Razorpay: any;
+    }
+  }
+
+  function resetButton(btn: HTMLButtonElement, label: string) {
+    btn.disabled = false;
+    btn.textContent = label;
+  }
+
   // Place order
   document.getElementById('place-order-btn')!.addEventListener('click', async () => {
     const name = (document.getElementById('c-name') as HTMLInputElement).value.trim();
@@ -327,67 +338,107 @@ import Layout from '../layouts/Layout.astro';
       return;
     }
 
-    const days = Math.max(1, Math.round((new Date(toVal).getTime() - new Date(fromVal).getTime()) / 86400000) + 1);
-    const discountPct = getDiscountForDays(days);
-    const subtotal = getCartSubtotalPerDay() * days;
-    const discountAmt = Math.round(subtotal * discountPct / 100);
-    const total = subtotal - discountAmt;
-    const orderRef = generateOrderRef();
-
-    const order = {
-      ref: orderRef,
-      customer: { name, phone, email, city, venue, notes },
-      items: cart,
-      dates: { from: fromVal, to: toVal, days },
-      pricing: { subtotalPerDay: getCartSubtotalPerDay(), subtotal, discountPct, discountAmt, total },
-    };
-
-    // Disable button
     const btn = document.getElementById('place-order-btn') as HTMLButtonElement;
     btn.disabled = true;
-    btn.textContent = 'Placing order…';
+    btn.textContent = 'Creating order…';
+
+    let created: {
+      order_ref: string;
+      razorpay_order_id: string;
+      amount_paise: number;
+      key_id: string;
+      days: number;
+      subtotal_per_day: number;
+      discount_pct: number;
+      discount_amount: number;
+      total_amount: number;
+    };
 
     try {
-      // Submit to Netlify Forms
-      const formData = new URLSearchParams({
-        'form-name': 'order',
-        ref: orderRef,
-        name, phone, email, city, venue, notes,
-        date_from: fromVal, date_to: toVal,
-        days: String(days),
-        total: String(total),
-        order_json: JSON.stringify(order),
-      });
-      await fetch('/', {
+      const res = await fetch('/api/orders/create', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: formData.toString(),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: cart.map(i => ({ slug: i.slug, quantity: i.quantity })),
+          customer: { name, phone, email, city, venue, notes },
+          dates: { from: fromVal, to: toVal },
+        }),
       });
-    } catch (_) {
-      // Netlify submission is best-effort; proceed regardless
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        alert(data.error || 'Could not create your order. Please try again.');
+        resetButton(btn, 'Pay & Place Order');
+        return;
+      }
+      created = data;
+    } catch {
+      alert('Network error creating your order. Please try again.');
+      resetButton(btn, 'Pay & Place Order');
+      return;
     }
 
-    // Save order for confirmation page
-    saveLastOrder(order);
-    clearCart();
-    updateCartBadge();
+    btn.textContent = 'Opening payment…';
 
-    window.location.href = '/order-confirmation';
+    const rzp = new window.Razorpay({
+      key: created.key_id,
+      amount: created.amount_paise,
+      currency: 'INR',
+      name: 'Backline India',
+      description: `Order ${created.order_ref}`,
+      order_id: created.razorpay_order_id,
+      prefill: { name, email, contact: phone },
+      theme: { color: '#171717' },
+      handler: async (response: any) => {
+        btn.textContent = 'Verifying payment…';
+        try {
+          const verifyRes = await fetch('/api/orders/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              order_ref: created.order_ref,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            }),
+          });
+          const verifyData = await verifyRes.json();
+          if (!verifyRes.ok || !verifyData.ok) {
+            alert('Payment succeeded but verification failed. Please contact us with your order ID: ' + created.order_ref);
+            resetButton(btn, 'Pay & Place Order');
+            return;
+          }
+        } catch {
+          alert('Payment succeeded but we could not confirm it. Please contact us with your order ID: ' + created.order_ref);
+          resetButton(btn, 'Pay & Place Order');
+          return;
+        }
+
+        saveLastOrder({
+          ref: created.order_ref,
+          customer: { name, phone, email, city, venue, notes },
+          items: cart,
+          dates: { from: fromVal, to: toVal, days: created.days },
+          pricing: {
+            subtotalPerDay: created.subtotal_per_day,
+            subtotal: created.subtotal_per_day * created.days,
+            discountPct: created.discount_pct,
+            discountAmt: created.discount_amount,
+            total: created.total_amount,
+          },
+        });
+        clearCart();
+        updateCartBadge();
+        window.location.href = `/order-confirmation?ref=${encodeURIComponent(created.order_ref)}`;
+      },
+      modal: {
+        ondismiss: () => {
+          resetButton(btn, 'Pay & Place Order');
+        },
+      },
+    });
+
+    rzp.open();
   });
 </script>
 
-<!-- Hidden Netlify form for detection -->
-<form name="order" data-netlify="true" style="display:none;">
-  <input type="text" name="ref" />
-  <input type="text" name="name" />
-  <input type="text" name="phone" />
-  <input type="email" name="email" />
-  <input type="text" name="city" />
-  <input type="text" name="venue" />
-  <textarea name="notes"></textarea>
-  <input type="text" name="date_from" />
-  <input type="text" name="date_to" />
-  <input type="number" name="days" />
-  <input type="number" name="total" />
-  <textarea name="order_json"></textarea>
-</form>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
