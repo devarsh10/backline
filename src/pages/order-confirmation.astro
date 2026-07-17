@@ -38,6 +38,7 @@ import Layout from '../layouts/Layout.astro';
       <div class="ref-band">
         <span class="ref-label">Order reference</span>
         <span id="conf-ref" class="ref-val">—</span>
+        <a id="track-link" href="/track" class="ref-track-link">Track delivery status →</a>
       </div>
 
       <!-- Two-column layout -->
@@ -186,6 +187,8 @@ import Layout from '../layouts/Layout.astro';
     font-weight: 500; color: var(--color-ink);
     letter-spacing: 0.04em;
   }
+  .ref-track-link { font-size: 13px; color: var(--color-link); text-decoration: none; margin-left: auto; }
+  .ref-track-link:hover { text-decoration: underline; }
 
   /* Layout */
   .confirm-layout { display: grid; grid-template-columns: 1fr 320px; gap: 32px; align-items: start; }
@@ -311,6 +314,7 @@ import Layout from '../layouts/Layout.astro';
   function renderOrder(order: any) {
     // Ref
     document.getElementById('conf-ref')!.textContent = order.ref;
+    (document.getElementById('track-link') as HTMLAnchorElement).href = `/track?ref=${encodeURIComponent(order.ref)}`;
 
     // Date of order (today)
     const today = new Date();

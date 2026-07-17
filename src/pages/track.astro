@@ -1,0 +1,168 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout
+  title="Track Your Order"
+  description="Check the delivery status of your Backline India rental order."
+  noIndex={true}
+>
+  <div class="page-container">
+    <h1 class="display-lg">Track your order</h1>
+    <p class="page-sub">Enter your order reference and phone number to check its delivery status.</p>
+
+    <div class="track-layout">
+      <div class="track-form-card">
+        <form id="track-form">
+          <div class="form-group">
+            <label class="form-label" for="ref">Order reference</label>
+            <input class="form-input" type="text" id="ref" name="ref" placeholder="BLI-20260717-ABC123" required autocomplete="off" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="phone">Phone number</label>
+            <input class="form-input" type="tel" id="phone" name="phone" placeholder="+91 98765 43210" required autocomplete="tel" />
+          </div>
+          <p id="track-error" class="track-error" style="display:none;"></p>
+          <button type="submit" class="btn-primary track-btn" id="track-btn">Track Order</button>
+        </form>
+      </div>
+
+      <div id="track-result" class="track-result-card" style="display:none;">
+        <div class="track-result-header">
+          <span class="track-ref" id="result-ref">—</span>
+          <span class="track-total" id="result-total">—</span>
+        </div>
+        <p class="track-dates" id="result-dates">—</p>
+        <div class="steps-list" id="steps-list"></div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .page-container { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+  .page-sub { color: var(--color-body); font-size: 14px; margin: 4px 0 32px; }
+
+  .track-layout { display: flex; flex-direction: column; gap: 20px; }
+
+  .track-form-card, .track-result-card {
+    background-color: var(--color-canvas); border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-lg); padding: 24px;
+  }
+
+  .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 16px; }
+  .form-label { font-size: 12px; font-weight: 500; color: var(--color-body); }
+  .form-input {
+    background-color: var(--color-canvas); border: 1px solid var(--color-hairline); border-radius: var(--radius-sm);
+    color: var(--color-ink); font-size: 15px; font-family: var(--font-sans); height: 42px; padding: 0 12px; width: 100%;
+  }
+  .form-input:focus { border-color: var(--color-ink); outline: none; }
+  .track-error { font-size: 13px; color: var(--color-error); margin: -4px 0 12px; }
+  .track-btn { width: 100%; justify-content: center; }
+
+  .track-result-header { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+  .track-ref { font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--color-ink); letter-spacing: 0.02em; }
+  .track-total { font-size: 16px; font-weight: 700; color: var(--color-ink); }
+  .track-dates { font-size: 13px; color: var(--color-mute); margin: 0 0 20px; }
+
+  @media (max-width: 560px) {
+    .page-container { padding: 32px 16px 60px; }
+    .track-form-card, .track-result-card { padding: 18px; }
+  }
+</style>
+
+<!-- is:global: the step timeline is injected via innerHTML in the script below. -->
+<style is:global>
+  .steps-list { display: flex; flex-direction: column; gap: 0; }
+  .step-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--color-hairline); }
+  .step-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .step-num {
+    width: 22px; height: 22px; flex-shrink: 0;
+    background-color: var(--color-canvas-soft-2); color: var(--color-mute);
+    border-radius: 50%; font-size: 11px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center; margin-top: 1px;
+  }
+  .step-item.done .step-num { background-color: var(--color-accent); color: var(--color-on-primary); }
+  .step-item.current .step-num { background-color: var(--color-ink); color: var(--color-on-primary); }
+  .step-name { font-size: 13px; font-weight: 600; color: var(--color-ink); margin: 0 0 2px; }
+  .step-item:not(.done):not(.current) .step-name { color: var(--color-mute); }
+  .step-desc { font-size: 12px; color: var(--color-body); margin: 0; line-height: 1.6; }
+</style>
+
+<script>
+  const STEPS = [
+    { key: 'order_placed', name: 'Order placed', desc: 'We’ve received your order.' },
+    { key: 'payment_received', name: 'Payment received', desc: 'Your booking is confirmed.' },
+    { key: 'out_for_delivery', name: 'Out for delivery', desc: 'Our crew is on the way with your gear.' },
+    { key: 'delivered', name: 'Delivered', desc: 'Gear has arrived and is set up.' },
+  ];
+
+  const params = new URLSearchParams(window.location.search);
+  const refInput = document.getElementById('ref') as HTMLInputElement;
+  if (params.get('ref')) refInput.value = params.get('ref')!;
+
+  function fp(n: number) { return `₹${n.toLocaleString('en-IN')}`; }
+
+  document.getElementById('track-form')!.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const ref = refInput.value.trim();
+    const phone = (document.getElementById('phone') as HTMLInputElement).value.trim();
+    const errorEl = document.getElementById('track-error')!;
+    const btn = document.getElementById('track-btn') as HTMLButtonElement;
+    errorEl.style.display = 'none';
+    btn.disabled = true;
+    btn.textContent = 'Checking…';
+
+    try {
+      const res = await fetch('/api/orders/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_ref: ref, phone }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        errorEl.textContent = data.error || 'Could not find that order.';
+        errorEl.style.display = 'block';
+        document.getElementById('track-result')!.style.display = 'none';
+        return;
+      }
+      renderResult(data);
+    } catch {
+      errorEl.textContent = 'Network error. Please try again.';
+      errorEl.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Track Order';
+    }
+  });
+
+  function renderResult(data: any) {
+    document.getElementById('result-ref')!.textContent = data.order_ref;
+    document.getElementById('result-total')!.textContent = fp(data.total_amount);
+
+    const dateOpts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' };
+    const from = new Date(data.rental_start_date).toLocaleDateString('en-IN', dateOpts);
+    const to = new Date(data.rental_end_date).toLocaleDateString('en-IN', dateOpts);
+    document.getElementById('result-dates')!.textContent = `${from} – ${to}`;
+
+    const currentIdx = STEPS.findIndex(s => s.key === data.status);
+    const stepsList = document.getElementById('steps-list')!;
+    stepsList.innerHTML = STEPS.map((s, i) => {
+      const state = i < currentIdx ? 'done' : i === currentIdx ? 'current' : '';
+      const icon = i < currentIdx
+        ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>'
+        : `${i + 1}`;
+      return `
+        <div class="step-item ${state}">
+          <div class="step-num">${icon}</div>
+          <div class="step-body">
+            <p class="step-name">${s.name}</p>
+            <p class="step-desc">${s.desc}</p>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    document.getElementById('track-result')!.style.display = 'block';
+  }
+</script>
