@@ -99,6 +99,32 @@ export async function getOrderByRef(db: D1Database, orderRef: string): Promise<O
   return row ?? null;
 }
 
+export interface OrderListRow {
+  order_ref: string;
+  customer_name: string;
+  customer_phone: string;
+  customer_email: string;
+  city: string;
+  rental_start_date: string;
+  rental_end_date: string;
+  items_json: string;
+  total_amount: number;
+  status: string;
+  created_at: string;
+}
+
+export async function listOrders(db: D1Database, limit = 200): Promise<OrderListRow[]> {
+  const { results } = await db
+    .prepare(
+      `SELECT order_ref, customer_name, customer_phone, customer_email, city,
+              rental_start_date, rental_end_date, items_json, total_amount, status, created_at
+       FROM orders ORDER BY created_at DESC LIMIT ?`
+    )
+    .bind(limit)
+    .all<OrderListRow>();
+  return results;
+}
+
 export async function markOrderPaid(db: D1Database, orderRef: string, razorpayPaymentId: string): Promise<void> {
   await db
     .prepare(

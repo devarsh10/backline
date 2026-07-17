@@ -4,3 +4,8 @@ RAZORPAY_KEY_SECRET=xxxxxxxxxxxxxxxxxxxxxxxx
 # Email sending stays off until EMAIL_ENABLED is set to "true" in wrangler.jsonc
 # and a real RESEND_API_KEY is provided here (or via `wrangler secret put`).
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxx
+
+# Password to log in at /admin/login and view /admin/orders.
+ADMIN_PASSWORD=change-me
+# Random secret used to sign the admin session cookie (any long random string).
+ADMIN_SESSION_SECRET=change-me-too

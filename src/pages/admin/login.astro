@@ -1,0 +1,63 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="Admin Login" noIndex={true}>
+  <div class="login-container">
+    <div class="login-card">
+      <h1 class="display-md">Admin Login</h1>
+      <p class="login-sub">Enter the admin password to view orders.</p>
+      <form id="login-form">
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <input class="form-input" type="password" id="password" name="password" required autofocus />
+        </div>
+        <p id="login-error" class="login-error" style="display:none;"></p>
+        <button type="submit" class="btn-primary login-btn">Log in</button>
+      </form>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .login-container { max-width: 400px; margin: 80px auto; padding: 0 24px; }
+  .login-card {
+    background-color: var(--color-canvas); border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-lg); padding: 32px;
+  }
+  .login-sub { font-size: 13px; color: var(--color-mute); margin: 4px 0 20px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 16px; }
+  .form-label { font-size: 12px; font-weight: 500; color: var(--color-body); }
+  .form-input {
+    background-color: var(--color-canvas); border: 1px solid var(--color-hairline); border-radius: var(--radius-sm);
+    color: var(--color-ink); font-size: 14px; font-family: var(--font-sans); height: 40px; padding: 0 12px; width: 100%;
+  }
+  .form-input:focus { border-color: var(--color-ink); outline: none; }
+  .login-btn { width: 100%; justify-content: center; }
+  .login-error { font-size: 13px; color: var(--color-error); margin: -4px 0 12px; }
+</style>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const redirectTo = params.get('redirect') || '/admin/orders';
+
+  document.getElementById('login-form')!.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const password = (document.getElementById('password') as HTMLInputElement).value;
+    const errorEl = document.getElementById('login-error')!;
+    errorEl.style.display = 'none';
+
+    const res = await fetch('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      errorEl.textContent = data.error || 'Login failed. Please try again.';
+      errorEl.style.display = 'block';
+      return;
+    }
+    window.location.href = redirectTo;
+  });
+</script>
