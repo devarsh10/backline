@@ -146,10 +146,14 @@ import Layout from '../layouts/Layout.astro';
     document.getElementById('result-dates')!.textContent = `${from} – ${to}`;
 
     const currentIdx = STEPS.findIndex(s => s.key === data.status);
+    const isFinalStep = currentIdx === STEPS.length - 1;
     const stepsList = document.getElementById('steps-list')!;
     stepsList.innerHTML = STEPS.map((s, i) => {
-      const state = i < currentIdx ? 'done' : i === currentIdx ? 'current' : '';
-      const icon = i < currentIdx
+      // The last step, once reached, IS the completed state — treat it as
+      // "done" (checkmark) rather than "current" (in-progress, awaiting next step).
+      const isDone = i < currentIdx || (i === currentIdx && isFinalStep);
+      const state = isDone ? 'done' : i === currentIdx ? 'current' : '';
+      const icon = isDone
         ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>'
         : `${i + 1}`;
       return `
