@@ -8,6 +8,8 @@ interface Props {
   description?: string;
   ogImage?: string;
   noIndex?: boolean;
+  manifest?: string;
+  webAppTitle?: string;
 }
 
 const {
@@ -15,6 +17,8 @@ const {
   description = 'Professional backline rental across Gujarat — drum kits, cymbals, amplifiers, digital pianos, and keyboards for concerts, events, and studios. Transparent pricing, no account required.',
   ogImage = '/og-default.jpg',
   noIndex = false,
+  manifest,
+  webAppTitle,
 } = Astro.props;
 
 const canonical = new URL(Astro.url.pathname, Astro.site || 'https://backlineindia.com').href;
@@ -33,6 +37,16 @@ const canonical = new URL(Astro.url.pathname, Astro.site || 'https://backlineind
     <title>{title} — Backline India</title>
     <meta name="description" content={description} />
     {noIndex && <meta name="robots" content="noindex" />}
+
+    {manifest && (
+      <>
+        <link rel="manifest" href={manifest} />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content={webAppTitle || title} />
+      </>
+    )}
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />

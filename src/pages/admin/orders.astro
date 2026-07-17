@@ -2,72 +2,69 @@
 import Layout from '../../layouts/Layout.astro';
 ---
 
-<Layout title="Orders" noIndex={true}>
+<Layout title="Orders" noIndex={true} manifest="/admin.webmanifest" webAppTitle="BL Admin">
   <div class="page-container">
     <h1 class="display-lg">Orders</h1>
     <p id="orders-loading" class="loading-note">Loading orders…</p>
-    <div id="orders-table-wrap" class="orders-table-scroll" style="display:none;">
-      <table class="orders-table">
-        <colgroup>
-          <col style="width: 140px;" />
-          <col style="width: 140px;" />
-          <col style="width: 180px;" />
-          <col style="width: 80px;" />
-          <col style="width: 260px;" />
-          <col style="width: 150px;" />
-          <col style="width: 80px;" />
-          <col style="width: 150px;" />
-          <col style="width: 100px;" />
-        </colgroup>
-        <thead>
-          <tr>
-            <th>Order Ref</th>
-            <th>Customer</th>
-            <th>Contact</th>
-            <th>City</th>
-            <th>Items</th>
-            <th>Dates</th>
-            <th>Total</th>
-            <th>Status</th>
-            <th>Placed</th>
-          </tr>
-        </thead>
-        <tbody id="orders-tbody"></tbody>
-      </table>
-    </div>
+    <div id="orders-grid" class="orders-grid" style="display:none;"></div>
     <p id="orders-empty" class="loading-note" style="display:none;">No orders yet.</p>
   </div>
 </Layout>
 
 <style>
-  .page-container { max-width: 1280px; margin: 0 auto; padding: 32px 24px 80px; }
+  .page-container { max-width: 1280px; margin: 0 auto; padding: 32px 16px 80px; }
   .loading-note { color: var(--color-mute); font-size: 14px; }
 </style>
 
-<!-- is:global: table rows are injected via innerHTML in the script below, so Astro's
-     scoped-style attribute never reaches them — scoped rules would only style <thead>. -->
+<!-- is:global: cards are injected via innerHTML in the script below, so Astro's
+     scoped-style attribute never reaches them (see commit 2f8fdb9). -->
 <style is:global>
-  .orders-table-scroll { margin-top: 20px; overflow-x: auto; }
-  .orders-table { width: 100%; min-width: 1280px; border-collapse: collapse; table-layout: fixed; font-size: 13px; }
-  .orders-table th {
-    text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--color-hairline-strong);
-    border-right: 1px solid var(--color-hairline);
-    color: var(--color-mute); font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em;
+  .orders-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px; margin-top: 20px;
   }
-  .orders-table th:last-child { border-right: none; }
-  .orders-table td {
-    padding: 10px 12px; border-bottom: 1px solid var(--color-hairline); border-right: 1px solid var(--color-hairline);
-    color: var(--color-body); vertical-align: top;
-    overflow-wrap: break-word; word-break: break-word;
+  .order-card {
+    background-color: var(--color-canvas); border: 1px solid var(--color-hairline);
+    border-left: 3px solid var(--color-hairline-strong); border-radius: var(--radius-lg);
+    padding: 16px; display: flex; flex-direction: column; gap: 10px;
   }
-  .orders-table td:last-child { border-right: none; }
-  .orders-table tr:hover { background-color: var(--color-canvas-soft-2); }
-  .status-badge { display: inline-block; padding: 2px 8px; border-radius: var(--radius-full); font-size: 11px; font-weight: 500; white-space: nowrap; }
-  .status-order_placed { background-color: var(--color-canvas-soft-2); color: var(--color-mute); }
-  .status-payment_received { background-color: var(--color-accent-soft); color: var(--color-accent-deep); }
+  .order-card.status-payment_received { border-left-color: var(--color-accent-deep); }
+  .order-card.status-out_for_delivery { border-left-color: var(--color-warning); }
+  .order-card.status-delivered { border-left-color: var(--color-accent); }
+
+  .oc-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .oc-ref { font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: var(--color-ink); letter-spacing: 0.02em; }
+  .oc-total { font-size: 16px; font-weight: 700; color: var(--color-ink); white-space: nowrap; }
+
+  .oc-name { font-size: 14px; font-weight: 600; color: var(--color-ink); margin: 0; }
+  .oc-sub { font-size: 12px; color: var(--color-mute); margin: 2px 0 0; line-height: 1.5; }
+
+  .oc-items {
+    font-size: 13px; color: var(--color-body); line-height: 1.5;
+    padding: 8px 0; border-top: 1px solid var(--color-hairline); border-bottom: 1px solid var(--color-hairline);
+  }
+  .oc-dates { font-size: 13px; color: var(--color-body); }
+
+  .oc-status-row { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+  .oc-status-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-mute); }
+  .status-select {
+    width: 100%; height: 42px; font-size: 15px; padding: 0 10px;
+    border-radius: var(--radius-sm); border: 1px solid var(--color-hairline);
+    background-color: var(--color-canvas-soft-2); color: var(--color-ink); font-family: var(--font-sans);
+  }
+  .status-select:disabled { opacity: 0.6; }
+  .oc-placed { font-size: 11px; color: var(--color-mute); margin: 0; }
 </style>
 
 <script>
+  const STATUS_LABELS: Record<string, string> = {
+    order_placed: 'Order Placed',
+    payment_received: 'Payment Received',
+    out_for_delivery: 'Out for Delivery',
+    delivered: 'Delivered',
+  };
+  const STATUS_ORDER = Object.keys(STATUS_LABELS);
+
   async function loadOrders() {
     const res = await fetch('/api/admin/orders');
     if (res.status === 401) {
@@ -83,25 +80,68 @@ import Layout from '../../layouts/Layout.astro';
       return;
     }
 
-    const tbody = document.getElementById('orders-tbody')!;
-    tbody.innerHTML = data.orders.map((o: any) => {
+    const grid = document.getElementById('orders-grid')!;
+    grid.innerHTML = data.orders.map((o: any) => {
       const items = JSON.parse(o.items_json).map((l: any) => `${l.name} ×${l.quantity}`).join(', ');
       const placed = new Date(o.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+      const options = STATUS_ORDER.map(s =>
+        `<option value="${s}" ${s === o.status ? 'selected' : ''}>${STATUS_LABELS[s]}</option>`
+      ).join('');
+
       return `
-        <tr>
-          <td>${o.order_ref}</td>
-          <td>${o.customer_name}</td>
-          <td>${o.customer_phone}<br/>${o.customer_email}</td>
-          <td>${o.city}</td>
-          <td>${items}</td>
-          <td>${o.rental_start_date} → ${o.rental_end_date}</td>
-          <td>₹${o.total_amount.toLocaleString('en-IN')}</td>
-          <td><span class="status-badge status-${o.status}">${o.status.replace(/_/g, ' ')}</span></td>
-          <td>${placed}</td>
-        </tr>
+        <div class="order-card status-${o.status}">
+          <div class="oc-top">
+            <span class="oc-ref">${o.order_ref}</span>
+            <span class="oc-total">₹${o.total_amount.toLocaleString('en-IN')}</span>
+          </div>
+          <div>
+            <p class="oc-name">${o.customer_name}</p>
+            <p class="oc-sub">${o.customer_phone} · ${o.customer_email}</p>
+            <p class="oc-sub">${o.city}</p>
+          </div>
+          <div class="oc-items">${items}</div>
+          <div class="oc-dates">${o.rental_start_date} → ${o.rental_end_date}</div>
+          <div class="oc-status-row">
+            <label class="oc-status-label">Status</label>
+            <select class="status-select" data-order-ref="${o.order_ref}">${options}</select>
+          </div>
+          <p class="oc-placed">Placed ${placed}</p>
+        </div>
       `;
     }).join('');
-    document.getElementById('orders-table-wrap')!.style.display = 'block';
+
+    grid.querySelectorAll<HTMLSelectElement>('.status-select').forEach((select) => {
+      select.dataset.prev = select.value;
+      select.addEventListener('change', async () => {
+        const orderRef = select.dataset.orderRef!;
+        const newStatus = select.value;
+        const previousValue = select.dataset.prev!;
+        select.disabled = true;
+
+        try {
+          const res = await fetch('/api/admin/orders/status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ order_ref: orderRef, status: newStatus }),
+          });
+          const result = await res.json();
+          if (!res.ok || !result.ok) {
+            alert(result.error || 'Could not update status.');
+            select.value = previousValue;
+          } else {
+            select.dataset.prev = newStatus;
+            select.closest('.order-card')!.className = `order-card status-${newStatus}`;
+          }
+        } catch {
+          alert('Network error updating status.');
+          select.value = previousValue;
+        } finally {
+          select.disabled = false;
+        }
+      });
+    });
+
+    grid.style.display = 'grid';
   }
 
   loadOrders();

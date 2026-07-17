@@ -135,3 +135,34 @@ export async function markOrderPaid(db: D1Database, orderRef: string, razorpayPa
     .bind(razorpayPaymentId, orderRef)
     .run();
 }
+
+export const ORDER_STATUSES = ['order_placed', 'payment_received', 'out_for_delivery', 'delivered'] as const;
+export type OrderStatus = (typeof ORDER_STATUSES)[number];
+
+export async function updateOrderStatus(db: D1Database, orderRef: string, status: OrderStatus): Promise<void> {
+  await db
+    .prepare(`UPDATE orders SET status = ?, updated_at = datetime('now') WHERE order_ref = ?`)
+    .bind(status, orderRef)
+    .run();
+}
+
+export interface OrderTrackingRow {
+  order_ref: string;
+  customer_phone: string;
+  status: string;
+  rental_start_date: string;
+  rental_end_date: string;
+  items_json: string;
+  total_amount: number;
+}
+
+export async function getOrderForTracking(db: D1Database, orderRef: string): Promise<OrderTrackingRow | null> {
+  const row = await db
+    .prepare(
+      `SELECT order_ref, customer_phone, status, rental_start_date, rental_end_date, items_json, total_amount
+       FROM orders WHERE order_ref = ?`
+    )
+    .bind(orderRef)
+    .first<OrderTrackingRow>();
+  return row ?? null;
+}
