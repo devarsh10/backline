@@ -51,6 +51,27 @@ export async function insertOrder(
     .run();
 }
 
+export async function getOverlappingBookedSlugs(
+  db: D1Database,
+  fromDate: string,
+  toDate: string
+): Promise<Set<string>> {
+  const { results } = await db
+    .prepare(
+      `SELECT items_json FROM orders
+       WHERE status != 'cancelled' AND rental_start_date <= ? AND rental_end_date >= ?`
+    )
+    .bind(toDate, fromDate)
+    .all<{ items_json: string }>();
+
+  const bookedSlugs = new Set<string>();
+  for (const row of results) {
+    const lines = JSON.parse(row.items_json) as OrderLine[];
+    for (const line of lines) bookedSlugs.add(line.slug);
+  }
+  return bookedSlugs;
+}
+
 export async function setRazorpayOrderId(db: D1Database, orderRef: string, razorpayOrderId: string): Promise<void> {
   await db
     .prepare(`UPDATE orders SET razorpay_order_id = ?, updated_at = datetime('now') WHERE order_ref = ?`)

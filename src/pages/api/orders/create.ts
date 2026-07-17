@@ -1,7 +1,13 @@
 import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
 import { computeOrderPricing, PricingError } from '../../../lib/pricing';
-import { generateOrderRef, insertOrder, setRazorpayOrderId, type OrderCustomer } from '../../../lib/db';
+import {
+  generateOrderRef,
+  insertOrder,
+  setRazorpayOrderId,
+  getOverlappingBookedSlugs,
+  type OrderCustomer,
+} from '../../../lib/db';
 import { createRazorpayOrder } from '../../../lib/razorpay';
 
 export const prerender = false;
@@ -40,6 +46,18 @@ export const POST: APIRoute = async ({ request }) => {
   } catch (err) {
     if (err instanceof PricingError) return badRequest(err.message);
     throw err;
+  }
+
+  const bookedSlugs = await getOverlappingBookedSlugs(env.DB, dates.from, dates.to);
+  const unavailable = pricing.lines.filter(line => bookedSlugs.has(line.slug));
+  if (unavailable.length) {
+    return new Response(
+      JSON.stringify({
+        ok: false,
+        error: `Already booked for these dates: ${unavailable.map(l => l.name).join(', ')}`,
+      }),
+      { status: 409, headers: { 'content-type': 'application/json' } }
+    );
   }
 
   const orderRef = generateOrderRef();
