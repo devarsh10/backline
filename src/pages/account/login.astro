@@ -45,6 +45,9 @@ import Layout from '../../layouts/Layout.astro';
 </style>
 
 <script>
+  const params = new URLSearchParams(window.location.search);
+  const redirectTo = params.get('redirect') || '/';
+
   document.getElementById('login-form')!.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = (document.getElementById('email') as HTMLInputElement).value;
@@ -67,6 +70,6 @@ import Layout from '../../layouts/Layout.astro';
       errorEl.style.display = 'block';
       return;
     }
-    window.location.href = '/';
+    window.location.href = redirectTo;
   });
 </script>

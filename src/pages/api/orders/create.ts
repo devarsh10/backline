@@ -10,6 +10,8 @@ import {
 } from '../../../lib/db';
 import { createRazorpayOrder } from '../../../lib/razorpay';
 import { getEquipmentBySlug } from '../../../lib/equipmentDb';
+import { verifyCustomerSessionToken } from '../../../lib/customerAuth';
+import { getCustomerById } from '../../../lib/customerDb';
 
 export const prerender = false;
 
@@ -26,7 +28,20 @@ function badRequest(message: string) {
   });
 }
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, cookies }) => {
+  const sessionToken = cookies.get('customer_session')?.value;
+  const customerId = await verifyCustomerSessionToken(sessionToken, env.CUSTOMER_SESSION_SECRET);
+  if (!customerId) {
+    return new Response(JSON.stringify({ ok: false, error: 'Please log in to place an order' }), {
+      status: 401,
+      headers: { 'content-type': 'application/json' },
+    });
+  }
+  const account = await getCustomerById(env.DB, customerId);
+  if (!account) {
+    return new Response(JSON.stringify({ ok: false, error: 'Account not found' }), { status: 404 });
+  }
+
   let body: CreateOrderBody;
   try {
     body = await request.json();
@@ -36,10 +51,14 @@ export const POST: APIRoute = async ({ request }) => {
 
   const { items, customer, dates } = body ?? {};
   if (!items?.length) return badRequest('Cart is empty');
-  if (!customer?.name || !customer?.phone || !customer?.email || !customer?.city) {
+  if (!customer?.name || !customer?.phone || !customer?.city) {
     return badRequest('Missing required customer details');
   }
   if (!dates?.from || !dates?.to) return badRequest('Missing rental dates');
+
+  // The order's email is always the logged-in account's email, never client-supplied,
+  // so order history lookups stay trustworthy.
+  customer.email = account.email;
 
   let pricing;
   try {
@@ -70,7 +89,7 @@ export const POST: APIRoute = async ({ request }) => {
   const orderRef = generateOrderRef();
 
   try {
-    await insertOrder(env.DB, orderRef, customer, dates.from, dates.to, pricing);
+    await insertOrder(env.DB, orderRef, customer, dates.from, dates.to, pricing, customerId);
 
     const razorpayOrder = await createRazorpayOrder(pricing.totalAmount * 100, orderRef, {
       RAZORPAY_KEY_ID: env.RAZORPAY_KEY_ID,

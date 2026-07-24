@@ -21,18 +21,20 @@ export async function insertOrder(
   customer: OrderCustomer,
   fromDate: string,
   toDate: string,
-  pricing: PricingResult
+  pricing: PricingResult,
+  customerId: number
 ): Promise<void> {
   await db
     .prepare(
       `INSERT INTO orders (
-        order_ref, customer_name, customer_phone, customer_email, city, venue, notes,
+        order_ref, customer_id, customer_name, customer_phone, customer_email, city, venue, notes,
         rental_start_date, rental_end_date, rental_days, items_json,
         subtotal_per_day, discount_pct, discount_amount, total_amount
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .bind(
       orderRef,
+      customerId,
       customer.name,
       customer.phone,
       customer.email,
@@ -123,6 +125,18 @@ export async function listOrders(db: D1Database, limit = 200): Promise<OrderList
        FROM orders ORDER BY created_at DESC LIMIT ?`
     )
     .bind(limit)
+    .all<OrderListRow>();
+  return results;
+}
+
+export async function getOrdersByCustomerId(db: D1Database, customerId: number): Promise<OrderListRow[]> {
+  const { results } = await db
+    .prepare(
+      `SELECT order_ref, customer_name, customer_phone, customer_email, city,
+              rental_start_date, rental_end_date, items_json, total_amount, status, created_at
+       FROM orders WHERE customer_id = ? ORDER BY created_at DESC`
+    )
+    .bind(customerId)
     .all<OrderListRow>();
   return results;
 }
