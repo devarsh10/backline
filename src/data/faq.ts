@@ -48,8 +48,8 @@ export const categoryFaq: Record<string, FaqItem[]> = {
       answer: 'Drum kit rental pricing varies by kit type — check our Drums &amp; Cymbals page for current per-day rates.',
     },
     {
-      question: 'Can I rent a drum kit near me in Ahmedabad?',
-      answer: 'Yes, Backline India delivers, sets up, and picks up drum kits anywhere in Ahmedabad.',
+      question: 'Can I rent a drum kit near me in Gujarat?',
+      answer: 'Yes, Backline India delivers, sets up, and picks up drum kits anywhere in Gujarat — Ahmedabad, Surat, Vadodara, Rajkot, and beyond.',
     },
   ],
   'drum-accessories': [

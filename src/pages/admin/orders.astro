@@ -55,6 +55,7 @@ import Layout from '../../layouts/Layout.astro';
     padding: 8px 0; border-top: 1px solid var(--color-hairline); border-bottom: 1px solid var(--color-hairline);
   }
   .oc-dates { font-size: 13px; color: var(--color-body); }
+  .oc-logistics { padding-top: 6px; border-top: 1px dashed var(--color-hairline); }
 
   .oc-status-row { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
   .oc-status-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-mute); }
@@ -112,6 +113,12 @@ import Layout from '../../layouts/Layout.astro';
           </div>
           <div class="oc-items">${items}</div>
           <div class="oc-dates">${o.rental_start_date} → ${o.rental_end_date}</div>
+          <div class="oc-logistics">
+            ${o.venue ? `<p class="oc-sub">📍 ${o.venue}</p>` : ''}
+            <p class="oc-sub">Stage: ${o.stage_dimensions || '—'}</p>
+            <p class="oc-sub">Reach by: ${o.venue_reach_time || '—'} · Ready by: ${o.backline_ready_time || '—'}</p>
+            <p class="oc-sub">Sound check: ${o.soundcheck_time || '—'} · Show ends: ${o.show_end_time || '—'}</p>
+          </div>
           <div class="oc-status-row">
             <label class="oc-status-label">Status</label>
             <select class="status-select" data-order-ref="${o.order_ref}">${options}</select>

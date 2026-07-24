@@ -7,6 +7,11 @@ export interface OrderCustomer {
   city: string;
   venue?: string;
   notes?: string;
+  stageDimensions: string;
+  venueReachTime?: string;
+  backlineReadyTime?: string;
+  soundcheckTime?: string;
+  showEndTime?: string;
 }
 
 export function generateOrderRef(): string {
@@ -28,9 +33,10 @@ export async function insertOrder(
     .prepare(
       `INSERT INTO orders (
         order_ref, customer_id, customer_name, customer_phone, customer_email, city, venue, notes,
+        stage_dimensions, venue_reach_time, backline_ready_time, soundcheck_time, show_end_time,
         rental_start_date, rental_end_date, rental_days, items_json,
         subtotal_per_day, discount_pct, discount_amount, total_amount
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .bind(
       orderRef,
@@ -41,6 +47,11 @@ export async function insertOrder(
       customer.city,
       customer.venue ?? null,
       customer.notes ?? null,
+      customer.stageDimensions,
+      customer.venueReachTime ?? null,
+      customer.backlineReadyTime ?? null,
+      customer.soundcheckTime ?? null,
+      customer.showEndTime ?? null,
       fromDate,
       toDate,
       pricing.days,
@@ -109,6 +120,12 @@ export interface OrderListRow {
   customer_phone: string;
   customer_email: string;
   city: string;
+  venue: string | null;
+  stage_dimensions: string;
+  venue_reach_time: string | null;
+  backline_ready_time: string | null;
+  soundcheck_time: string | null;
+  show_end_time: string | null;
   rental_start_date: string;
   rental_end_date: string;
   items_json: string;
@@ -117,13 +134,13 @@ export interface OrderListRow {
   created_at: string;
 }
 
+const ORDER_LIST_COLUMNS = `order_ref, customer_name, customer_phone, customer_email, city, venue,
+  stage_dimensions, venue_reach_time, backline_ready_time, soundcheck_time, show_end_time,
+  rental_start_date, rental_end_date, items_json, total_amount, status, created_at`;
+
 export async function listOrders(db: D1Database, limit = 200): Promise<OrderListRow[]> {
   const { results } = await db
-    .prepare(
-      `SELECT order_ref, customer_name, customer_phone, customer_email, city,
-              rental_start_date, rental_end_date, items_json, total_amount, status, created_at
-       FROM orders ORDER BY created_at DESC LIMIT ?`
-    )
+    .prepare(`SELECT ${ORDER_LIST_COLUMNS} FROM orders ORDER BY created_at DESC LIMIT ?`)
     .bind(limit)
     .all<OrderListRow>();
   return results;
@@ -131,11 +148,7 @@ export async function listOrders(db: D1Database, limit = 200): Promise<OrderList
 
 export async function getOrdersByCustomerId(db: D1Database, customerId: number): Promise<OrderListRow[]> {
   const { results } = await db
-    .prepare(
-      `SELECT order_ref, customer_name, customer_phone, customer_email, city,
-              rental_start_date, rental_end_date, items_json, total_amount, status, created_at
-       FROM orders WHERE customer_id = ? ORDER BY created_at DESC`
-    )
+    .prepare(`SELECT ${ORDER_LIST_COLUMNS} FROM orders WHERE customer_id = ? ORDER BY created_at DESC`)
     .bind(customerId)
     .all<OrderListRow>();
   return results;

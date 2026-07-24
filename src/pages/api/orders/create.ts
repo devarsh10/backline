@@ -54,6 +54,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   if (!customer?.name || !customer?.phone || !customer?.city) {
     return badRequest('Missing required customer details');
   }
+  if (!customer?.stageDimensions?.trim()) return badRequest('Stage dimensions are required');
   if (!dates?.from || !dates?.to) return badRequest('Missing rental dates');
 
   // The order's email is always the logged-in account's email, never client-supplied,

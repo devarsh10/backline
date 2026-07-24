@@ -76,11 +76,14 @@ if (!account) return Astro.redirect('/account/login?redirect=/checkout');
               <label class="form-label" for="c-city">City *</label>
               <select class="form-input" id="c-city" name="city" required>
                 <option value="">Select city</option>
-                <option value="Mumbai">Mumbai</option>
-                <option value="Delhi / NCR">Delhi / NCR</option>
-                <option value="Bangalore">Bangalore</option>
-                <option value="Other">Other</option>
+                <option value="Ahmedabad">Ahmedabad</option>
+                <option value="Surat">Surat</option>
+                <option value="Vadodara">Vadodara</option>
+                <option value="Rajkot">Rajkot</option>
+                <option value="Gandhinagar">Gandhinagar</option>
+                <option value="Other">Other (Gujarat)</option>
               </select>
+              <input class="form-input" type="text" id="c-city-other" name="city_other" placeholder="Enter your city" style="display:none; margin-top: 8px;" />
             </div>
           </div>
           <div class="form-group">
@@ -89,8 +92,40 @@ if (!account) return Astro.redirect('/account/login?redirect=/checkout');
           </div>
           <div class="form-group">
             <label class="form-label" for="c-notes">Additional notes</label>
-            <textarea class="form-input form-textarea" id="c-notes" name="notes" rows="3" placeholder="Stage dimensions, load-in time, access instructions…"></textarea>
+            <textarea class="form-input form-textarea" id="c-notes" name="notes" rows="3" placeholder="Access instructions, parking, anything else we should know…"></textarea>
           </div>
+        </section>
+
+        <!-- Event logistics -->
+        <section class="checkout-section">
+          <h2 class="section-title">Event logistics</h2>
+          <p class="section-sub">Helps our crew plan delivery, setup, and sound check timing.</p>
+          <div class="form-group">
+            <label class="form-label" for="c-stage-dims">Stage dimensions *</label>
+            <input class="form-input" type="text" id="c-stage-dims" name="stage_dimensions" placeholder="e.g. 20ft × 15ft" required autocomplete="off" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="c-reach-time">Estimated venue reach time</label>
+              <input class="form-input" type="time" id="c-reach-time" name="venue_reach_time" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="c-ready-time">Backline should be ready by?</label>
+              <input class="form-input" type="time" id="c-ready-time" name="backline_ready_time" />
+            </div>
+          </div>
+          <p class="field-note">Setup takes a minimum of 2.5 hours once our crew reaches the venue — please pick a "ready by" time with that in mind.</p>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="c-soundcheck-time">Sound &amp; band check time</label>
+              <input class="form-input" type="time" id="c-soundcheck-time" name="soundcheck_time" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="c-show-end-time">Estimated show end time</label>
+              <input class="form-input" type="time" id="c-show-end-time" name="show_end_time" />
+            </div>
+          </div>
+          <p class="stage-warning"><strong>Stage must be ready to load equipment (carpets, flooring, etc. laid down) before our crew arrives</strong> — otherwise we won't be able to have the backline ready by the requested time.</p>
         </section>
 
         <!-- Payment info -->
@@ -153,18 +188,30 @@ if (!account) return Astro.redirect('/account/login?redirect=/checkout');
   .section-title { font-size: 16px; font-weight: 600; color: var(--color-ink); letter-spacing: -0.02em; margin: 0 0 4px; }
   .section-sub { font-size: 13px; color: var(--color-mute); margin: 0 0 16px; }
 
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
-  .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 0; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; min-width: 0; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 0; min-width: 0; }
   .form-label { font-size: 12px; font-weight: 500; color: var(--color-body); }
   .form-input {
     background-color: var(--color-canvas);
     border: 1px solid var(--color-hairline); border-radius: var(--radius-sm);
     color: var(--color-ink); font-size: 14px; font-family: var(--font-sans);
     height: 40px; padding: 0 12px;
-    transition: border-color 0.15s; width: 100%;
+    transition: border-color 0.15s; width: 100%; max-width: 100%;
+    box-sizing: border-box; min-width: 0;
   }
   .form-input:focus { border-color: var(--color-ink); outline: none; }
   .form-textarea { height: auto; padding: 10px 12px; resize: vertical; line-height: 1.5; }
+
+  /* Native date/time picker icon: force it to follow the page's light/dark
+     scheme instead of defaulting to a black icon that vanishes on dark canvases. */
+  .form-input[type="date"], .form-input[type="time"] { color-scheme: dark; }
+
+  .field-note { font-size: 12px; color: var(--color-mute); margin: -8px 0 14px; line-height: 1.5; }
+  .stage-warning {
+    font-size: 13px; color: var(--color-ink); line-height: 1.6; margin: 4px 0 0;
+    background-color: var(--color-canvas-soft-2); border-radius: var(--radius-sm);
+    padding: 12px 14px;
+  }
 
   .dates-calc {
     display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
@@ -262,6 +309,16 @@ if (!account) return Astro.redirect('/account/login?redirect=/checkout');
   const subtotalPerDay = getCartSubtotalPerDay();
   document.getElementById('oc-subtotal')!.textContent = `${fp(subtotalPerDay)}/day`;
 
+  // "Other" city toggle
+  const cityInput = document.getElementById('c-city') as HTMLSelectElement;
+  const cityOtherInput = document.getElementById('c-city-other') as HTMLInputElement;
+  cityInput.addEventListener('change', () => {
+    const isOther = cityInput.value === 'Other';
+    cityOtherInput.style.display = isOther ? 'block' : 'none';
+    cityOtherInput.required = isOther;
+    if (!isOther) cityOtherInput.value = '';
+  });
+
   // Date calculation
   const dateFrom = document.getElementById('date-from') as HTMLInputElement;
   const dateTo = document.getElementById('date-to') as HTMLInputElement;
@@ -338,14 +395,25 @@ if (!account) return Astro.redirect('/account/login?redirect=/checkout');
     const name = (document.getElementById('c-name') as HTMLInputElement).value.trim();
     const phone = (document.getElementById('c-phone') as HTMLInputElement).value.trim();
     const email = (document.getElementById('c-email') as HTMLInputElement).value.trim();
-    const city = (document.getElementById('c-city') as HTMLSelectElement).value;
+    const citySelectValue = (document.getElementById('c-city') as HTMLSelectElement).value;
+    const cityOtherValue = (document.getElementById('c-city-other') as HTMLInputElement).value.trim();
+    const city = citySelectValue === 'Other' ? cityOtherValue : citySelectValue;
     const venue = (document.getElementById('c-venue') as HTMLInputElement).value.trim();
     const notes = (document.getElementById('c-notes') as HTMLTextAreaElement).value.trim();
+    const stageDimensions = (document.getElementById('c-stage-dims') as HTMLInputElement).value.trim();
+    const venueReachTime = (document.getElementById('c-reach-time') as HTMLInputElement).value;
+    const backlineReadyTime = (document.getElementById('c-ready-time') as HTMLInputElement).value;
+    const soundcheckTime = (document.getElementById('c-soundcheck-time') as HTMLInputElement).value;
+    const showEndTime = (document.getElementById('c-show-end-time') as HTMLInputElement).value;
     const fromVal = dateFrom.value;
     const toVal = dateTo.value;
 
     if (!name || !phone || !email || !city || !fromVal || !toVal) {
       alert('Please fill in all required fields (name, phone, email, city, and rental dates).');
+      return;
+    }
+    if (!stageDimensions) {
+      alert('Please fill in the stage dimensions.');
       return;
     }
 
@@ -371,7 +439,10 @@ if (!account) return Astro.redirect('/account/login?redirect=/checkout');
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           items: cart.map(i => ({ slug: i.slug, quantity: i.quantity })),
-          customer: { name, phone, email, city, venue, notes },
+          customer: {
+            name, phone, email, city, venue, notes,
+            stageDimensions, venueReachTime, backlineReadyTime, soundcheckTime, showEndTime,
+          },
           dates: { from: fromVal, to: toVal },
         }),
       });
