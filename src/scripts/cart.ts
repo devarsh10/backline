@@ -9,7 +9,7 @@ export interface CartItem {
 }
 
 export function getMaxQuantity(slug: string): number {
-  return getCart().find(i => i.slug === slug)?.totalUnits ?? 1;
+  return getCart().find(i => i.slug === slug)?.totalUnits ?? 0;
 }
 
 const CART_KEY = 'backline_cart';

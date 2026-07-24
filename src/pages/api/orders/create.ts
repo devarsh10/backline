@@ -53,7 +53,7 @@ export const POST: APIRoute = async ({ request }) => {
   const unavailable = [];
   for (const line of pricing.lines) {
     const item = await getEquipmentBySlug(env.DB, line.slug);
-    const totalUnits = item?.totalUnits ?? 1;
+    const totalUnits = item?.totalUnits ?? 0;
     const alreadyBooked = bookedQuantities.get(line.slug) ?? 0;
     if (alreadyBooked + line.quantity > totalUnits) unavailable.push(line);
   }

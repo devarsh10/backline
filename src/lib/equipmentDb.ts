@@ -10,7 +10,6 @@ interface EquipmentRow {
   price_per_day: number;
   min_days: number;
   included: string;
-  available: number;
   image: string | null;
   featured: number;
   related_accessory_slugs: string | null;
@@ -18,6 +17,7 @@ interface EquipmentRow {
 }
 
 function mapRow(row: EquipmentRow): EquipmentItem {
+  const totalUnits = row.total_units ?? 0;
   return {
     slug: row.slug,
     name: row.name,
@@ -28,11 +28,11 @@ function mapRow(row: EquipmentRow): EquipmentItem {
     pricePerDay: row.price_per_day,
     minDays: row.min_days,
     included: JSON.parse(row.included),
-    available: row.available === 1,
+    available: totalUnits > 0,
     image: row.image ?? undefined,
     featured: row.featured === 1,
     relatedAccessorySlugs: row.related_accessory_slugs ? JSON.parse(row.related_accessory_slugs) : undefined,
-    totalUnits: row.total_units ?? undefined,
+    totalUnits,
   };
 }
 

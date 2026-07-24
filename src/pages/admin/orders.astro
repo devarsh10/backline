@@ -5,6 +5,10 @@ import Layout from '../../layouts/Layout.astro';
 
 <Layout title="Orders" noIndex={true} manifest="/admin.webmanifest" webAppTitle="BL Admin">
   <div class="page-container">
+    <div class="admin-tabs">
+      <a href="/admin/orders" class="admin-tab active">Orders</a>
+      <a href="/admin/equipment" class="admin-tab">Equipment Stock</a>
+    </div>
     <h1 class="display-lg">Orders</h1>
     <p id="orders-loading" class="loading-note">Loading orders…</p>
     <div id="orders-grid" class="orders-grid" style="display:none;"></div>
@@ -15,6 +19,12 @@ import Layout from '../../layouts/Layout.astro';
 <style>
   .page-container { max-width: 1280px; margin: 0 auto; padding: 32px 16px 80px; }
   .loading-note { color: var(--color-mute); font-size: 14px; }
+  .admin-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+  .admin-tab {
+    font-size: 13px; font-weight: 600; color: var(--color-mute); text-decoration: none;
+    padding: 6px 14px; border-radius: var(--radius-full); border: 1px solid var(--color-hairline);
+  }
+  .admin-tab.active { color: var(--color-on-primary); background-color: var(--color-ink); border-color: var(--color-ink); }
 </style>
 
 <!-- is:global: cards are injected via innerHTML in the script below, so Astro's

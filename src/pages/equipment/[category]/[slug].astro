@@ -112,7 +112,7 @@ const relatedItems = (await getEquipmentByCategory(env.DB, item.category))
                 data-brand={item.brand}
                 data-category={item.category}
                 data-price={item.pricePerDay}
-                data-total-units={item.totalUnits ?? 1}
+                data-total-units={item.totalUnits ?? 0}
               >
                 Add to Cart
               </button>
@@ -177,7 +177,7 @@ const relatedItems = (await getEquipmentByCategory(env.DB, item.category))
                 data-brand={acc.brand}
                 data-category={acc.category}
                 data-price={acc.pricePerDay}
-                data-total-units={acc.totalUnits ?? 1}
+                data-total-units={acc.totalUnits ?? 0}
                 aria-label={`Add ${acc.name} to cart`}
               >
                 + Add to Cart

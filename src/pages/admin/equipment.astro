@@ -1,0 +1,148 @@
+---
+export const prerender = false;
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="Equipment Stock" noIndex={true} manifest="/admin.webmanifest" webAppTitle="BL Admin">
+  <div class="page-container">
+    <div class="admin-tabs">
+      <a href="/admin/orders" class="admin-tab">Orders</a>
+      <a href="/admin/equipment" class="admin-tab active">Equipment Stock</a>
+    </div>
+    <h1 class="display-lg">Equipment Stock</h1>
+    <p class="page-sub">Set how many units of each item you actually own. Customers can never book more than this for the same dates.</p>
+    <p id="equipment-loading" class="loading-note">Loading equipment…</p>
+    <div id="equipment-grid" class="equipment-grid" style="display:none;"></div>
+  </div>
+</Layout>
+
+<style>
+  .page-container { max-width: 1280px; margin: 0 auto; padding: 32px 16px 80px; }
+  .admin-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+  .admin-tab {
+    font-size: 13px; font-weight: 600; color: var(--color-mute); text-decoration: none;
+    padding: 6px 14px; border-radius: var(--radius-full); border: 1px solid var(--color-hairline);
+  }
+  .admin-tab.active { color: var(--color-on-primary); background-color: var(--color-ink); border-color: var(--color-ink); }
+  .page-sub { color: var(--color-mute); font-size: 14px; margin: 0 0 24px; max-width: 560px; }
+  .loading-note { color: var(--color-mute); font-size: 14px; }
+</style>
+
+<style is:global>
+  .equipment-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px; margin-top: 20px;
+  }
+  .eq-card {
+    background-color: var(--color-canvas); border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-lg); padding: 16px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .eq-name { font-size: 14px; font-weight: 600; color: var(--color-ink); margin: 0; }
+  .eq-sub { font-size: 12px; color: var(--color-mute); margin: 0; }
+  .eq-price { font-size: 13px; color: var(--color-body); margin: 0; }
+  .eq-units-row { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+  .eq-units-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-mute); }
+  .eq-stepper {
+    display: flex; align-items: center; gap: 0;
+    border: 1px solid var(--color-hairline); border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+  .eq-stepper-btn {
+    width: 30px; height: 34px;
+    display: flex; align-items: center; justify-content: center;
+    background: none; border: none; cursor: pointer;
+    font-size: 16px; color: var(--color-ink);
+    transition: background-color 0.12s;
+  }
+  .eq-stepper-btn:hover:not(:disabled) { background-color: var(--color-canvas-soft-2); }
+  .eq-stepper-btn:disabled { color: var(--color-mute); cursor: not-allowed; opacity: 0.4; }
+  .eq-stepper-value { min-width: 32px; text-align: center; font-size: 15px; font-weight: 600; color: var(--color-ink); }
+  .eq-save-status { font-size: 11px; color: var(--color-mute); }
+  .eq-save-status.saved { color: var(--color-accent-deep); }
+  .eq-save-status.error { color: var(--color-error); }
+</style>
+
+<script>
+  async function loadEquipment() {
+    const res = await fetch('/api/admin/equipment');
+    if (res.status === 401) {
+      window.location.href = '/admin/login?redirect=' + encodeURIComponent('/admin/equipment');
+      return;
+    }
+
+    const data = await res.json();
+    document.getElementById('equipment-loading')!.style.display = 'none';
+
+    const grid = document.getElementById('equipment-grid')!;
+    grid.innerHTML = data.equipment.map((item: any) => `
+      <div class="eq-card">
+        <p class="eq-name">${item.name}</p>
+        <p class="eq-sub">${item.brand} · ${item.subcategory}</p>
+        <p class="eq-price">₹${item.pricePerDay.toLocaleString('en-IN')}/day · ${item.available ? 'Available' : 'Unavailable'}</p>
+        <div class="eq-units-row">
+          <label class="eq-units-label">Units owned</label>
+          <div class="eq-stepper" data-slug="${item.slug}">
+            <button type="button" class="eq-stepper-btn" data-delta="-1" aria-label="Decrease units">−</button>
+            <span class="eq-stepper-value" data-value="${item.totalUnits ?? 0}">${item.totalUnits ?? 0}</span>
+            <button type="button" class="eq-stepper-btn" data-delta="1" aria-label="Increase units">+</button>
+          </div>
+        </div>
+        <span class="eq-save-status" data-slug-status="${item.slug}"></span>
+      </div>
+    `).join('');
+
+    async function saveUnits(slug: string, valueEl: HTMLSpanElement, newUnits: number) {
+      const statusEl = grid.querySelector<HTMLSpanElement>(`[data-slug-status="${slug}"]`)!;
+      const previousValue = Number(valueEl.dataset.value);
+
+      statusEl.textContent = 'Saving…';
+      statusEl.className = 'eq-save-status';
+      valueEl.textContent = String(newUnits);
+
+      try {
+        const res = await fetch('/api/admin/equipment/units', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ slug, total_units: newUnits }),
+        });
+        const result = await res.json();
+        if (!res.ok || !result.ok) {
+          statusEl.textContent = result.error || 'Could not save.';
+          statusEl.className = 'eq-save-status error';
+          valueEl.textContent = String(previousValue);
+        } else {
+          valueEl.dataset.value = String(newUnits);
+          statusEl.textContent = 'Saved';
+          statusEl.className = 'eq-save-status saved';
+        }
+      } catch {
+        statusEl.textContent = 'Network error.';
+        statusEl.className = 'eq-save-status error';
+        valueEl.textContent = String(previousValue);
+      }
+    }
+
+    grid.querySelectorAll<HTMLDivElement>('.eq-stepper').forEach((stepper) => {
+      const slug = stepper.dataset.slug!;
+      const valueEl = stepper.querySelector<HTMLSpanElement>('.eq-stepper-value')!;
+
+      stepper.querySelectorAll<HTMLButtonElement>('.eq-stepper-btn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const delta = Number(btn.dataset.delta);
+          const current = Number(valueEl.dataset.value);
+          const newUnits = Math.max(0, current + delta);
+          if (newUnits === current) return;
+
+          stepper.querySelectorAll('button').forEach(b => (b as HTMLButtonElement).disabled = true);
+          await saveUnits(slug, valueEl, newUnits);
+          stepper.querySelectorAll('button').forEach(b => (b as HTMLButtonElement).disabled = false);
+        });
+      });
+    });
+
+    grid.style.display = 'grid';
+  }
+
+  loadEquipment();
+</script>
