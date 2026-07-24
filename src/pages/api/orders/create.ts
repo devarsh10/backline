@@ -9,7 +9,7 @@ import {
   type OrderCustomer,
 } from '../../../lib/db';
 import { createRazorpayOrder } from '../../../lib/razorpay';
-import { getEquipmentBySlug } from '../../../data/equipment';
+import { getEquipmentBySlug } from '../../../lib/equipmentDb';
 
 export const prerender = false;
 
@@ -43,18 +43,20 @@ export const POST: APIRoute = async ({ request }) => {
 
   let pricing;
   try {
-    pricing = computeOrderPricing(items, dates.from, dates.to);
+    pricing = await computeOrderPricing(env.DB, items, dates.from, dates.to);
   } catch (err) {
     if (err instanceof PricingError) return badRequest(err.message);
     throw err;
   }
 
   const bookedQuantities = await getBookedQuantities(env.DB, dates.from, dates.to);
-  const unavailable = pricing.lines.filter(line => {
-    const totalUnits = getEquipmentBySlug(line.slug)?.totalUnits ?? 1;
+  const unavailable = [];
+  for (const line of pricing.lines) {
+    const item = await getEquipmentBySlug(env.DB, line.slug);
+    const totalUnits = item?.totalUnits ?? 1;
     const alreadyBooked = bookedQuantities.get(line.slug) ?? 0;
-    return alreadyBooked + line.quantity > totalUnits;
-  });
+    if (alreadyBooked + line.quantity > totalUnits) unavailable.push(line);
+  }
   if (unavailable.length) {
     return new Response(
       JSON.stringify({

@@ -1,20 +1,20 @@
 ---
+import { env } from 'cloudflare:workers';
 import Layout from '../../../layouts/Layout.astro';
 import EquipmentCard from '../../../components/EquipmentCard.astro';
-import { equipment, getEquipmentBySlugs, getCategoryBySlug } from '../../../data/equipment';
+import { getCategoryBySlug } from '../../../data/equipment';
+import { getEquipmentBySlug, getEquipmentBySlugs, getEquipmentByCategory } from '../../../lib/equipmentDb';
 
-export async function getStaticPaths() {
-  return equipment.map(item => ({
-    params: { category: item.category, slug: item.slug },
-    props: { item },
-  }));
-}
+export const prerender = false;
 
-const { item } = Astro.props;
+const { slug } = Astro.params;
+const item = await getEquipmentBySlug(env.DB, slug!);
+if (!item) return Astro.redirect('/');
+
 const cat = getCategoryBySlug(item.category);
-const accessories = item.relatedAccessorySlugs ? getEquipmentBySlugs(item.relatedAccessorySlugs) : [];
-const relatedItems = equipment
-  .filter(e => e.category === item.category && e.slug !== item.slug && !item.relatedAccessorySlugs?.includes(e.slug))
+const accessories = item.relatedAccessorySlugs ? await getEquipmentBySlugs(env.DB, item.relatedAccessorySlugs) : [];
+const relatedItems = (await getEquipmentByCategory(env.DB, item.category))
+  .filter(e => e.slug !== item.slug && !item.relatedAccessorySlugs?.includes(e.slug))
   .slice(0, 3);
 ---
 
@@ -112,6 +112,7 @@ const relatedItems = equipment
                 data-brand={item.brand}
                 data-category={item.category}
                 data-price={item.pricePerDay}
+                data-total-units={item.totalUnits ?? 1}
               >
                 Add to Cart
               </button>
@@ -176,6 +177,7 @@ const relatedItems = equipment
                 data-brand={acc.brand}
                 data-category={acc.category}
                 data-price={acc.pricePerDay}
+                data-total-units={acc.totalUnits ?? 1}
                 aria-label={`Add ${acc.name} to cart`}
               >
                 + Add to Cart
@@ -379,6 +381,7 @@ const relatedItems = equipment
       brand: addBtn.dataset.brand!,
       category: addBtn.dataset.category!,
       pricePerDay: Number(addBtn.dataset.price),
+      totalUnits: Number(addBtn.dataset.totalUnits),
     });
     addBtn.textContent = '✓ Added to Cart';
     viewCartLink.style.display = 'flex';
@@ -395,6 +398,7 @@ const relatedItems = equipment
         brand: btn.dataset.brand!,
         category: btn.dataset.category!,
         pricePerDay: Number(btn.dataset.price),
+        totalUnits: Number(btn.dataset.totalUnits),
       });
       btn.textContent = '✓ Added';
       btn.classList.add('added');

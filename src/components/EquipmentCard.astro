@@ -47,6 +47,7 @@ const { item, compact = false } = Astro.props;
           data-brand={item.brand}
           data-category={item.category}
           data-price={item.pricePerDay}
+          data-total-units={item.totalUnits ?? 1}
           aria-label={`Add ${item.name} to cart`}
         >
           + Add
@@ -183,6 +184,7 @@ const { item, compact = false } = Astro.props;
         brand: btn.dataset.brand!,
         category: btn.dataset.category!,
         pricePerDay: Number(btn.dataset.price),
+        totalUnits: Number(btn.dataset.totalUnits),
       });
       btn.textContent = '✓ Added';
       btn.classList.add('added');

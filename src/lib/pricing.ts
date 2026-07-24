@@ -1,4 +1,5 @@
-import { getEquipmentBySlug, getDiscountForDays } from '../data/equipment';
+import { getDiscountForDays } from '../data/equipment';
+import { getEquipmentBySlug } from './equipmentDb';
 
 export interface OrderLineInput {
   slug: string;
@@ -34,31 +35,38 @@ export function computeRentalDays(fromDate: string, toDate: string): number {
   return Math.max(1, Math.round((to.getTime() - from.getTime()) / 86400000) + 1);
 }
 
-export function computeOrderPricing(items: OrderLineInput[], fromDate: string, toDate: string): PricingResult {
+export async function computeOrderPricing(
+  db: D1Database,
+  items: OrderLineInput[],
+  fromDate: string,
+  toDate: string
+): Promise<PricingResult> {
   if (!items.length) {
     throw new PricingError('Cart is empty');
   }
 
-  const lines: OrderLine[] = items.map(({ slug, quantity }) => {
-    if (!Number.isInteger(quantity) || quantity < 1) {
-      throw new PricingError(`Invalid quantity for ${slug}`);
-    }
-    const item = getEquipmentBySlug(slug);
-    if (!item) {
-      throw new PricingError(`Unknown equipment: ${slug}`);
-    }
-    if (!item.available) {
-      throw new PricingError(`Currently unavailable: ${item.name}`);
-    }
-    return {
-      slug: item.slug,
-      name: item.name,
-      brand: item.brand,
-      category: item.category,
-      pricePerDay: item.pricePerDay,
-      quantity,
-    };
-  });
+  const lines: OrderLine[] = await Promise.all(
+    items.map(async ({ slug, quantity }) => {
+      if (!Number.isInteger(quantity) || quantity < 1) {
+        throw new PricingError(`Invalid quantity for ${slug}`);
+      }
+      const item = await getEquipmentBySlug(db, slug);
+      if (!item) {
+        throw new PricingError(`Unknown equipment: ${slug}`);
+      }
+      if (!item.available) {
+        throw new PricingError(`Currently unavailable: ${item.name}`);
+      }
+      return {
+        slug: item.slug,
+        name: item.name,
+        brand: item.brand,
+        category: item.category,
+        pricePerDay: item.pricePerDay,
+        quantity,
+      };
+    })
+  );
 
   const days = computeRentalDays(fromDate, toDate);
   const subtotalPerDay = lines.reduce((sum, l) => sum + l.pricePerDay * l.quantity, 0);

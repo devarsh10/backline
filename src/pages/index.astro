@@ -1,11 +1,15 @@
 ---
+import { env } from 'cloudflare:workers';
 import Layout from '../layouts/Layout.astro';
 import EquipmentCard from '../components/EquipmentCard.astro';
 import FAQ from '../components/FAQ.astro';
-import { categories, getFeaturedEquipment } from '../data/equipment';
+import { categories } from '../data/equipment';
+import { getFeaturedEquipment } from '../lib/equipmentDb';
 import { generalFaq, paymentFaq } from '../data/faq';
 
-const featured = getFeaturedEquipment();
+export const prerender = false;
+
+const featured = await getFeaturedEquipment(env.DB);
 ---
 
 <Layout

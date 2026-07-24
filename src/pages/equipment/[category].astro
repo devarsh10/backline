@@ -1,21 +1,20 @@
 ---
+import { env } from 'cloudflare:workers';
 import Layout from '../../layouts/Layout.astro';
 import FAQ from '../../components/FAQ.astro';
-import { categories, getEquipmentByCategory, getCategoryBySlug } from '../../data/equipment';
+import { getCategoryBySlug } from '../../data/equipment';
+import { getEquipmentByCategory } from '../../lib/equipmentDb';
 import { categoryFaq } from '../../data/faq';
 import type { EquipmentItem } from '../../data/equipment';
 
-export async function getStaticPaths() {
-  return categories.map(cat => ({
-    params: { category: cat.slug },
-  }));
-}
+export const prerender = false;
 
 const { category } = Astro.params;
 const cat = getCategoryBySlug(category!);
-const allItems = getEquipmentByCategory(category!);
 
 if (!cat) return Astro.redirect('/');
+
+const allItems = await getEquipmentByCategory(env.DB, category!);
 
 // Some categories pull a second subsection out of the main list —
 // Cymbals under Drums, Stage Accessories under Pianos & Keyboards.

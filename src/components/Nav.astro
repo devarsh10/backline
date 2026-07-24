@@ -1,5 +1,8 @@
 ---
-import { equipment } from '../data/equipment';
+import { env } from 'cloudflare:workers';
+import { getAllEquipment } from '../lib/equipmentDb';
+
+const equipment = await getAllEquipment(env.DB);
 
 const currentPath = Astro.url.pathname;
 
