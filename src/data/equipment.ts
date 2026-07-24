@@ -21,6 +21,7 @@ export interface EquipmentItem {
   image?: string;
   featured?: boolean;
   relatedAccessorySlugs?: string[];
+  maxQuantity?: number;
 }
 
 export interface Category {
@@ -260,17 +261,18 @@ export const equipment: EquipmentItem[] = [
   },
   {
     slug: 'pearl-boom-cymbal-stands-x4',
-    name: 'Pearl Boom Cymbal Stands (×4)',
+    name: 'Pearl Boom Cymbal Stand — BC-930/BC-830',
     brand: 'Pearl',
     category: 'drum-accessories',
     subcategory: 'Hardware & Spares',
     specs: { 'Model': 'BC-930 / BC-830' },
-    pricePerDay: 275,
+    pricePerDay: 69,
     minDays: 1,
-    included: ['4× BC-930/BC-830 Boom Cymbal Stands'],
+    included: ['BC-930/BC-830 Boom Cymbal Stand'],
     available: false,
     image: '/images/equipment/pearl-boom-cymbal-stands-x4.jpg',
     featured: false,
+    maxQuantity: 4,
   },
   {
     slug: 'pearl-hw-series-pack',
@@ -316,17 +318,18 @@ export const equipment: EquipmentItem[] = [
   },
   {
     slug: 'dw-boom-cymbal-stand-x4',
-    name: 'DW Boom Cymbal Stands (×4) — DWCP3700',
+    name: 'DW Boom Cymbal Stand — DWCP3700',
     brand: 'DW',
     category: 'drum-accessories',
     subcategory: 'Hardware & Spares',
     specs: { 'Model': 'DWCP3700' },
-    pricePerDay: 300,
+    pricePerDay: 75,
     minDays: 1,
-    included: ['4× DWCP3700 Boom Cymbal Stand'],
+    included: ['DWCP3700 Boom Cymbal Stand'],
     available: false,
     image: '/images/equipment/dw-boom-cymbal-stand-x4.jpg',
     featured: false,
+    maxQuantity: 4,
   },
   {
     slug: 'dw-double-pedal',

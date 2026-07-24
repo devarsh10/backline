@@ -1,3 +1,5 @@
+import { getEquipmentBySlug } from '../data/equipment';
+
 export interface CartItem {
   slug: string;
   name: string;
@@ -5,6 +7,10 @@ export interface CartItem {
   category: string;
   pricePerDay: number;
   quantity: number;
+}
+
+export function getMaxQuantity(slug: string): number {
+  return getEquipmentBySlug(slug)?.maxQuantity ?? Infinity;
 }
 
 const CART_KEY = 'backline_cart';
@@ -26,11 +32,12 @@ function saveCart(items: CartItem[]): void {
 
 export function addToCart(item: Omit<CartItem, 'quantity'>): void {
   const cart = getCart();
+  const max = getMaxQuantity(item.slug);
   const existing = cart.find(i => i.slug === item.slug);
   if (existing) {
-    existing.quantity += 1;
+    existing.quantity = Math.min(existing.quantity + 1, max);
   } else {
-    cart.push({ ...item, quantity: 1 });
+    cart.push({ ...item, quantity: Math.min(1, max) });
   }
   saveCart(cart);
 }
@@ -43,7 +50,7 @@ export function updateQty(slug: string, qty: number): void {
   if (qty <= 0) { removeFromCart(slug); return; }
   const cart = getCart();
   const item = cart.find(i => i.slug === slug);
-  if (item) { item.quantity = qty; saveCart(cart); }
+  if (item) { item.quantity = Math.min(qty, getMaxQuantity(slug)); saveCart(cart); }
 }
 
 export function clearCart(): void {

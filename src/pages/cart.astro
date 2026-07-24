@@ -127,7 +127,7 @@ import Layout from '../layouts/Layout.astro';
 </style>
 
 <script>
-  import { getCart, removeFromCart, getCartSubtotalPerDay, getCartCount, formatPrice, updateCartBadge } from '../scripts/cart';
+  import { getCart, removeFromCart, updateQty, getMaxQuantity, getCartSubtotalPerDay, getCartCount, formatPrice, updateCartBadge } from '../scripts/cart';
 
   function formatPriceLocal(n: number) { return `₹${n.toLocaleString('en-IN')}`; }
 
@@ -151,7 +151,10 @@ import Layout from '../layouts/Layout.astro';
     emptyEl.style.display = 'none';
     contentEl.style.display = 'block';
 
-    itemsList.innerHTML = cart.map(item => `
+    itemsList.innerHTML = cart.map(item => {
+      const max = getMaxQuantity(item.slug);
+      const atMax = item.quantity >= max;
+      return `
       <div class="cart-item" data-slug="${item.slug}">
         <div class="item-img">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.2">
@@ -161,16 +164,34 @@ import Layout from '../layouts/Layout.astro';
         <div class="item-info">
           <p class="item-brand">${item.brand}</p>
           <a href="/equipment/${item.category}/${item.slug}" class="item-name">${item.name}</a>
-          <p class="item-unit-price">${formatPriceLocal(item.pricePerDay)}/day</p>
+          <p class="item-unit-price">${formatPriceLocal(item.pricePerDay)}/day each</p>
         </div>
         <div class="item-controls">
-          <span class="item-line-total">${formatPriceLocal(item.pricePerDay)}/day</span>
+          <div class="qty-stepper">
+            <button class="qty-btn" data-slug="${item.slug}" data-delta="-1" aria-label="Decrease quantity">−</button>
+            <span class="qty-value">${item.quantity}</span>
+            <button class="qty-btn" data-slug="${item.slug}" data-delta="1" ${atMax ? 'disabled' : ''} aria-label="Increase quantity">+</button>
+          </div>
+          <span class="item-line-total">${formatPriceLocal(item.pricePerDay * item.quantity)}/day</span>
           <button class="remove-btn" data-slug="${item.slug}" aria-label="Remove ${item.name}">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
+
+    // Quantity stepper listeners
+    itemsList.querySelectorAll<HTMLButtonElement>('.qty-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const slug = btn.dataset.slug!;
+        const delta = Number(btn.dataset.delta);
+        const current = getCart().find(i => i.slug === slug)?.quantity ?? 0;
+        updateQty(slug, current + delta);
+        renderCart();
+        updateCartBadge();
+      });
+    });
 
     // Remove event listeners
     itemsList.querySelectorAll<HTMLButtonElement>('.remove-btn').forEach(btn => {
@@ -207,7 +228,22 @@ import Layout from '../layouts/Layout.astro';
   .item-name { font-size: 14px; font-weight: 500; color: var(--color-ink); text-decoration: none; display: block; margin-bottom: 2px; }
   .item-name:hover { color: var(--color-link); }
   .item-unit-price { font-size: 12px; color: var(--color-mute); margin: 0; }
-  .item-controls { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+  .item-controls { display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
+  .qty-stepper {
+    display: flex; align-items: center; gap: 0;
+    border: 1px solid var(--color-hairline); border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+  .qty-btn {
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    background: none; border: none; cursor: pointer;
+    font-size: 15px; color: var(--color-ink);
+    transition: background-color 0.12s;
+  }
+  .qty-btn:hover:not(:disabled) { background-color: var(--color-canvas-soft-2); }
+  .qty-btn:disabled { color: var(--color-mute); cursor: not-allowed; opacity: 0.4; }
+  .qty-value { min-width: 26px; text-align: center; font-size: 13px; font-weight: 600; color: var(--color-ink); }
   .item-line-total { font-size: 14px; font-weight: 600; color: var(--color-ink); white-space: nowrap; min-width: 80px; text-align: right; }
   .remove-btn {
     background: none; border: none; cursor: pointer; color: var(--color-mute);
