@@ -5,10 +5,11 @@ import {
   generateOrderRef,
   insertOrder,
   setRazorpayOrderId,
-  getOverlappingBookedSlugs,
+  getBookedQuantities,
   type OrderCustomer,
 } from '../../../lib/db';
 import { createRazorpayOrder } from '../../../lib/razorpay';
+import { getEquipmentBySlug } from '../../../data/equipment';
 
 export const prerender = false;
 
@@ -48,13 +49,17 @@ export const POST: APIRoute = async ({ request }) => {
     throw err;
   }
 
-  const bookedSlugs = await getOverlappingBookedSlugs(env.DB, dates.from, dates.to);
-  const unavailable = pricing.lines.filter(line => bookedSlugs.has(line.slug));
+  const bookedQuantities = await getBookedQuantities(env.DB, dates.from, dates.to);
+  const unavailable = pricing.lines.filter(line => {
+    const totalUnits = getEquipmentBySlug(line.slug)?.totalUnits ?? 1;
+    const alreadyBooked = bookedQuantities.get(line.slug) ?? 0;
+    return alreadyBooked + line.quantity > totalUnits;
+  });
   if (unavailable.length) {
     return new Response(
       JSON.stringify({
         ok: false,
-        error: `Already booked for these dates: ${unavailable.map(l => l.name).join(', ')}`,
+        error: `Not enough units available for these dates: ${unavailable.map(l => l.name).join(', ')}`,
       }),
       { status: 409, headers: { 'content-type': 'application/json' } }
     );

@@ -21,7 +21,7 @@ export interface EquipmentItem {
   image?: string;
   featured?: boolean;
   relatedAccessorySlugs?: string[];
-  maxQuantity?: number;
+  totalUnits?: number;
 }
 
 export interface Category {
@@ -272,7 +272,7 @@ export const equipment: EquipmentItem[] = [
     available: false,
     image: '/images/equipment/pearl-boom-cymbal-stands-x4.jpg',
     featured: false,
-    maxQuantity: 4,
+    totalUnits: 4,
   },
   {
     slug: 'pearl-hw-series-pack',
@@ -329,7 +329,7 @@ export const equipment: EquipmentItem[] = [
     available: false,
     image: '/images/equipment/dw-boom-cymbal-stand-x4.jpg',
     featured: false,
-    maxQuantity: 4,
+    totalUnits: 4,
   },
   {
     slug: 'dw-double-pedal',
@@ -451,7 +451,7 @@ export const equipment: EquipmentItem[] = [
   // ── Amplifiers & Cabinets — Keyboard ──
   {
     slug: 'roland-kc600-keyboard-amp',
-    name: 'Roland KC-600 Stereo Mixing Keyboard Amp (×2 available)',
+    name: 'Roland KC-600 Stereo Mixing Keyboard Amp',
     brand: 'Roland',
     category: 'amplifiers',
     subcategory: 'Keyboard Amplifiers & Cabinets',
@@ -462,6 +462,7 @@ export const equipment: EquipmentItem[] = [
     available: false,
     image: '/images/equipment/roland-kc600-keyboard-amp.jpg',
     featured: false,
+    totalUnits: 2,
   },
 
   // ── Pianos & Keyboards ──

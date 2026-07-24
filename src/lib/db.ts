@@ -51,11 +51,11 @@ export async function insertOrder(
     .run();
 }
 
-export async function getOverlappingBookedSlugs(
+export async function getBookedQuantities(
   db: D1Database,
   fromDate: string,
   toDate: string
-): Promise<Set<string>> {
+): Promise<Map<string, number>> {
   const { results } = await db
     .prepare(
       `SELECT items_json FROM orders
@@ -64,12 +64,14 @@ export async function getOverlappingBookedSlugs(
     .bind(toDate, fromDate)
     .all<{ items_json: string }>();
 
-  const bookedSlugs = new Set<string>();
+  const bookedQuantities = new Map<string, number>();
   for (const row of results) {
     const lines = JSON.parse(row.items_json) as OrderLine[];
-    for (const line of lines) bookedSlugs.add(line.slug);
+    for (const line of lines) {
+      bookedQuantities.set(line.slug, (bookedQuantities.get(line.slug) ?? 0) + line.quantity);
+    }
   }
-  return bookedSlugs;
+  return bookedQuantities;
 }
 
 export async function setRazorpayOrderId(db: D1Database, orderRef: string, razorpayOrderId: string): Promise<void> {

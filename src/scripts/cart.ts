@@ -10,7 +10,7 @@ export interface CartItem {
 }
 
 export function getMaxQuantity(slug: string): number {
-  return getEquipmentBySlug(slug)?.maxQuantity ?? Infinity;
+  return getEquipmentBySlug(slug)?.totalUnits ?? 1;
 }
 
 const CART_KEY = 'backline_cart';
