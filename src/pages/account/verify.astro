@@ -1,0 +1,68 @@
+---
+export const prerender = false;
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="Verify Email" noIndex={true}>
+  <div class="login-container">
+    <div class="login-card">
+      <h1 class="display-md">Verify your email</h1>
+      <p class="login-sub" id="verify-sub">Enter the 6-digit code we emailed you.</p>
+      <form id="verify-form">
+        <div class="form-group">
+          <label class="form-label" for="code">Verification code</label>
+          <input class="form-input" type="text" id="code" name="code" inputmode="numeric" maxlength="6" required autofocus />
+        </div>
+        <p id="verify-error" class="login-error" style="display:none;"></p>
+        <button type="submit" class="btn-primary login-btn">Verify</button>
+      </form>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .login-container { max-width: 400px; margin: 60px auto; padding: 0 24px; }
+  .login-card {
+    background-color: var(--color-canvas); border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-lg); padding: 32px;
+  }
+  .login-sub { font-size: 13px; color: var(--color-mute); margin: 4px 0 20px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 16px; }
+  .form-label { font-size: 12px; font-weight: 500; color: var(--color-body); }
+  .form-input {
+    background-color: var(--color-canvas); border: 1px solid var(--color-hairline); border-radius: var(--radius-sm);
+    color: var(--color-ink); font-size: 14px; font-family: var(--font-sans); height: 40px; padding: 0 12px; width: 100%;
+    letter-spacing: 4px; text-align: center;
+  }
+  .form-input:focus { border-color: var(--color-ink); outline: none; }
+  .login-btn { width: 100%; justify-content: center; }
+  .login-error { font-size: 13px; color: var(--color-error); margin: -4px 0 12px; }
+</style>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const email = params.get('email') || '';
+  document.getElementById('verify-sub')!.textContent = email
+    ? `Enter the 6-digit code we emailed to ${email}.`
+    : 'Enter the 6-digit code we emailed you.';
+
+  document.getElementById('verify-form')!.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const code = (document.getElementById('code') as HTMLInputElement).value;
+    const errorEl = document.getElementById('verify-error')!;
+    errorEl.style.display = 'none';
+
+    const res = await fetch('/api/account/verify-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, code }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      errorEl.textContent = data.error || 'Verification failed. Please try again.';
+      errorEl.style.display = 'block';
+      return;
+    }
+    window.location.href = '/';
+  });
+</script>

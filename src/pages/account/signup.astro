@@ -1,0 +1,78 @@
+---
+export const prerender = false;
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="Create Account" description="Create a Backline India account to see your rental order history.">
+  <div class="login-container">
+    <div class="login-card">
+      <h1 class="display-md">Create account</h1>
+      <p class="login-sub">See your past and current rental orders in one place.</p>
+      <form id="signup-form">
+        <div class="form-group">
+          <label class="form-label" for="name">Name</label>
+          <input class="form-input" type="text" id="name" name="name" required autofocus />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="email">Email</label>
+          <input class="form-input" type="email" id="email" name="email" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="phone">Phone (optional)</label>
+          <input class="form-input" type="tel" id="phone" name="phone" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <input class="form-input" type="password" id="password" name="password" required minlength="8" />
+        </div>
+        <p id="signup-error" class="login-error" style="display:none;"></p>
+        <button type="submit" class="btn-primary login-btn">Create account</button>
+      </form>
+      <p class="login-footer">Already have an account? <a href="/account/login">Log in</a></p>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .login-container { max-width: 400px; margin: 60px auto; padding: 0 24px; }
+  .login-card {
+    background-color: var(--color-canvas); border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-lg); padding: 32px;
+  }
+  .login-sub { font-size: 13px; color: var(--color-mute); margin: 4px 0 20px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 16px; }
+  .form-label { font-size: 12px; font-weight: 500; color: var(--color-body); }
+  .form-input {
+    background-color: var(--color-canvas); border: 1px solid var(--color-hairline); border-radius: var(--radius-sm);
+    color: var(--color-ink); font-size: 14px; font-family: var(--font-sans); height: 40px; padding: 0 12px; width: 100%;
+  }
+  .form-input:focus { border-color: var(--color-ink); outline: none; }
+  .login-btn { width: 100%; justify-content: center; }
+  .login-error { font-size: 13px; color: var(--color-error); margin: -4px 0 12px; }
+  .login-footer { font-size: 13px; color: var(--color-mute); text-align: center; margin: 20px 0 0; }
+</style>
+
+<script>
+  document.getElementById('signup-form')!.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = (document.getElementById('name') as HTMLInputElement).value;
+    const email = (document.getElementById('email') as HTMLInputElement).value;
+    const phone = (document.getElementById('phone') as HTMLInputElement).value;
+    const password = (document.getElementById('password') as HTMLInputElement).value;
+    const errorEl = document.getElementById('signup-error')!;
+    errorEl.style.display = 'none';
+
+    const res = await fetch('/api/account/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, phone, password }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      errorEl.textContent = data.error || 'Signup failed. Please try again.';
+      errorEl.style.display = 'block';
+      return;
+    }
+    window.location.href = '/account/verify?email=' + encodeURIComponent(email);
+  });
+</script>

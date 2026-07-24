@@ -31,6 +31,18 @@ export async function sendEmail(env: EmailEnv, to: string, subject: string, html
   }
 }
 
+export function otpEmailHtml(code: string): string {
+  return `
+    <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+      <h2>Verify your email</h2>
+      <p>Your Backline India verification code is:</p>
+      <p style="font-size: 28px; font-weight: 700; letter-spacing: 4px;">${code}</p>
+      <p>This code expires in 10 minutes. If you didn't request this, you can ignore this email.</p>
+      <p>— Backline India</p>
+    </div>
+  `;
+}
+
 export function paymentReceivedEmailHtml(orderRef: string, customerName: string, totalAmount: number): string {
   const trackUrl = `https://backlineindia.com/track?ref=${encodeURIComponent(orderRef)}`;
   return `
