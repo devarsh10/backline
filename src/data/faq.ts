@@ -18,26 +18,26 @@ export const generalFaq: FaqItem[] = [
   },
   {
     question: 'How do I hire musical instruments from Backline India?',
-    answer: 'Simply browse our catalog, add the items you need to your cart, and check out — no account or login required. Orders are confirmed manually, and you can pay via UPI or bank transfer.',
+    answer: 'Browse our catalog and add the items you need to your cart — no account required for that. When you\'re ready to check out, create a free account (or log in) and pay securely online through Razorpay.',
   },
   {
     question: 'Do I need to create an account to rent equipment?',
-    answer: 'No. Backline India lets you browse, add to cart, and checkout without signing up.',
+    answer: 'You can browse and build your cart without one, but an account is required at checkout — it lets you track your order and see your full rental history anytime.',
   },
 ];
 
 export const paymentFaq: FaqItem[] = [
   {
     question: 'How do I pay for equipment rental on Backline India?',
-    answer: 'Payments are made via UPI or bank transfer after your order is manually confirmed by our team.',
+    answer: 'Pay securely online via card, UPI, or netbanking through Razorpay at checkout — your booking is confirmed as soon as payment succeeds.',
   },
   {
     question: 'Do you deliver and set up the equipment?',
     answer: 'Yes — delivery, setup, and pickup are all handled by the Backline India crew.',
   },
   {
-    question: 'How is my order confirmed?',
-    answer: "Since we don't use an automated payment gateway, our team manually reviews and confirms every order to ensure equipment availability.",
+    question: 'Do I need an account to book equipment?',
+    answer: 'Yes, an account (email and password, with a quick email verification) is required to check out — this lets you see your full order history and delivery status anytime from "My Account". Browsing and building your cart doesn\'t require an account.',
   },
 ];
 

@@ -1,11 +1,13 @@
 ---
 export const prerender = false;
 import Layout from '../layouts/Layout.astro';
+import FAQ from '../components/FAQ.astro';
+import { generalFaq, paymentFaq } from '../data/faq';
 ---
 
 <Layout
   title="Contact Us"
-  description="Get in touch with Backline India. Phone, email, or send us a message. We reply within 2 hours during business hours."
+  description="Get in touch with Backline India. Phone, email, or send us a message."
 >
   <div class="page-container">
     <div class="page-header">
@@ -15,46 +17,13 @@ import Layout from '../layouts/Layout.astro';
     </div>
 
     <div class="contact-layout">
-      <!-- Contact methods -->
       <div class="contact-main">
-        <div class="contact-methods">
-          <a href="tel:+917600393515" class="contact-method-card">
-            <div class="contact-method-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.1 19.79 19.79 0 0 1 1.61 4.48 2 2 0 0 1 3.6 2.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.16 6.16l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-            </div>
-            <div class="contact-method-body">
-              <h3 class="contact-method-title">Call us</h3>
-              <p class="contact-method-value">+91 7600 393 515</p>
-              <p class="contact-method-note">Mon–Sat, 9 AM–8 PM IST</p>
-            </div>
-            <svg class="contact-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-          </a>
-
-          <a href="mailto:hello@backlineindia.com" class="contact-method-card">
-            <div class="contact-method-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-            </div>
-            <div class="contact-method-body">
-              <h3 class="contact-method-title">Email us</h3>
-              <p class="contact-method-value">hello@backlineindia.com</p>
-              <p class="contact-method-note">Reply within 2 hours</p>
-            </div>
-            <svg class="contact-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-          </a>
-        </div>
-
         <!-- Message form -->
         <div class="message-card">
           <h2 class="message-title">Send a message</h2>
-          <p class="message-sub">For custom package requests, outstation events, or anything else — we'll get back to you within 2 hours.</p>
+          <p class="message-sub">For custom package requests, outstation events, or anything else — just tell us what you need.</p>
 
-          <form
-            class="message-form"
-            name="contact"
-            method="POST"
-            data-netlify="true"
-            action="/contact-success"
-          >
+          <form class="message-form" id="contact-form">
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label" for="c-name">Your name *</label>
@@ -80,7 +49,8 @@ import Layout from '../layouts/Layout.astro';
                 placeholder="Tell us about your event, what gear you need, your city and dates…"
               ></textarea>
             </div>
-            <button type="submit" class="btn-primary" style="width: 100%; justify-content: center;">Send message</button>
+            <p id="contact-error" class="contact-form-error" style="display:none;"></p>
+            <button type="submit" class="btn-primary" id="contact-submit-btn" style="width: 100%; justify-content: center;">Send message</button>
           </form>
         </div>
       </div>
@@ -102,39 +72,14 @@ import Layout from '../layouts/Layout.astro';
               <span class="info-label">Hours</span>
               <span class="info-value">Mon–Sat, 9 AM–8 PM IST</span>
             </div>
-            <div class="info-row">
-              <span class="info-label">Response</span>
-              <span class="info-value">Within 2 hours</span>
-            </div>
           </div>
-        </div>
-
-        <div class="info-card">
-          <h3 class="info-card-title caption-mono">Service areas</h3>
-          <div class="info-list">
-            <div class="info-row">
-              <span class="info-label">Ahmedabad</span>
-              <span class="info-value">Full city coverage</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Surat, Vadodara, Rajkot</span>
-              <span class="info-value">Full coverage</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Rest of Gujarat</span>
-              <span class="info-value">Outstation on request</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="info-card info-card--soft">
-          <h3 class="info-card-title" style="font-size: 14px; font-weight: 600; color: var(--color-ink); letter-spacing: -0.02em; margin: 0 0 8px;">Ready to browse?</h3>
-          <p style="font-size: 13px; color: var(--color-body); margin: 0 0 14px; line-height: 1.5;">You can build your cart and place an order directly on the site — no call needed.</p>
-          <a href="/#categories" class="btn-primary" style="width: 100%; justify-content: center; font-size: 13px; padding: 8px 12px;">Browse equipment</a>
+          <p class="service-area-note">We deliver across Gujarat — Ahmedabad, Surat, Vadodara, Rajkot, and beyond, with outstation on request.</p>
         </div>
       </aside>
     </div>
   </div>
+
+  <FAQ eyebrow="FAQ" groups={[{ heading: 'Common questions', items: [...generalFaq, ...paymentFaq] }]} />
 </Layout>
 
 <style>
@@ -145,29 +90,6 @@ import Layout from '../layouts/Layout.astro';
 
   .contact-layout { display: grid; grid-template-columns: 1fr 320px; gap: 40px; align-items: start; }
   .contact-main { display: flex; flex-direction: column; gap: 16px; }
-
-  .contact-methods { display: flex; flex-direction: column; gap: 8px; }
-  .contact-method-card {
-    display: flex; align-items: center; gap: 16px;
-    padding: 20px;
-    background-color: var(--color-canvas);
-    border: 1px solid var(--color-hairline); border-radius: var(--radius-md);
-    text-decoration: none; color: inherit;
-    transition: border-color 0.15s, box-shadow 0.15s;
-  }
-  .contact-method-card:hover { border-color: var(--color-hairline-strong); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-  .contact-method-icon {
-    width: 44px; height: 44px; flex-shrink: 0;
-    background-color: var(--color-canvas-soft-2);
-    border: 1px solid var(--color-hairline); border-radius: var(--radius-md);
-    display: flex; align-items: center; justify-content: center;
-    color: var(--color-body);
-  }
-  .contact-method-body { flex: 1; }
-  .contact-method-title { font-size: 14px; font-weight: 600; color: var(--color-ink); margin: 0 0 2px; }
-  .contact-method-value { font-size: 15px; font-weight: 500; color: var(--color-ink); margin: 0 0 2px; }
-  .contact-method-note { font-size: 12px; color: var(--color-mute); margin: 0; }
-  .contact-arrow { color: var(--color-mute); flex-shrink: 0; }
 
   .message-card {
     background-color: var(--color-canvas);
@@ -196,13 +118,16 @@ import Layout from '../layouts/Layout.astro';
     border: 1px solid var(--color-hairline); border-radius: var(--radius-md);
     padding: 18px;
   }
-  .info-card--soft { background-color: var(--color-canvas-soft-2); }
   .info-card-title { color: var(--color-mute); display: block; margin-bottom: 12px; }
   .info-list { display: flex; flex-direction: column; gap: 10px; }
   .info-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
   .info-label { font-size: 12px; color: var(--color-mute); flex-shrink: 0; }
   .info-value { font-size: 13px; color: var(--color-ink); font-weight: 500; text-align: right; text-decoration: none; }
   a.info-value:hover { color: var(--color-link); }
+  .service-area-note {
+    font-size: 12.5px; color: var(--color-mute); line-height: 1.6;
+    margin: 14px 0 0; padding-top: 14px; border-top: 1px solid var(--color-hairline);
+  }
 
   @media (max-width: 960px) {
     .contact-layout { grid-template-columns: 1fr; }
@@ -213,6 +138,46 @@ import Layout from '../layouts/Layout.astro';
     .page-header { padding: 40px 0 32px; }
     .message-card { padding: 20px 16px; }
     .form-row { grid-template-columns: 1fr; }
-    .contact-method-card { flex-wrap: wrap; }
   }
+  .contact-form-error { font-size: 13px; color: var(--color-error); margin: -4px 0 0; }
 </style>
+
+<script>
+  const form = document.getElementById('contact-form') as HTMLFormElement;
+  const errorEl = document.getElementById('contact-error')!;
+  const btn = document.getElementById('contact-submit-btn') as HTMLButtonElement;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorEl.style.display = 'none';
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+
+    const name = (document.getElementById('c-name') as HTMLInputElement).value.trim();
+    const phone = (document.getElementById('c-phone') as HTMLInputElement).value.trim();
+    const email = (document.getElementById('c-email') as HTMLInputElement).value.trim();
+    const message = (document.getElementById('c-message') as HTMLTextAreaElement).value.trim();
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, phone, email, message }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        errorEl.textContent = data.error || 'Could not send your message. Please try again.';
+        errorEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Send message';
+        return;
+      }
+      window.location.href = '/contact-success';
+    } catch {
+      errorEl.textContent = 'Network error. Please try again.';
+      errorEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Send message';
+    }
+  });
+</script>

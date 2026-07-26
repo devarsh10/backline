@@ -43,6 +43,23 @@ export function otpEmailHtml(code: string): string {
   `;
 }
 
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+export function contactMessageEmailHtml(name: string, phone: string, email: string, message: string): string {
+  return `
+    <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+      <h2>New contact form message</h2>
+      <p><strong>Name:</strong> ${escapeHtml(name)}<br />
+      <strong>Phone:</strong> ${escapeHtml(phone)}<br />
+      <strong>Email:</strong> ${escapeHtml(email) || '—'}</p>
+      <p><strong>Message:</strong></p>
+      <p style="white-space: pre-wrap;">${escapeHtml(message)}</p>
+    </div>
+  `;
+}
+
 export function paymentReceivedEmailHtml(orderRef: string, customerName: string, totalAmount: number): string {
   const trackUrl = `https://backlineindia.com/account/orders`;
   return `
