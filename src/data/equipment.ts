@@ -56,7 +56,7 @@ export const categories: Category[] = [
   {
     slug: 'drum-accessories',
     name: 'Drum Accessories',
-    description: 'Hardware sets, boom stands, drum shields, and rugs — rented separately from the kit.',
+    description: 'Hardware sets and boom stands — rented separately from the kit.',
     icon: '🔧',
   },
   {
@@ -76,6 +76,12 @@ export const categories: Category[] = [
     name: 'Percussion',
     description: 'Congas, bongos, timbales, cajons, and djembes for events and studio sessions.',
     icon: '🪘',
+  },
+  {
+    slug: 'miscellaneous',
+    name: 'Miscellaneous',
+    description: 'Stage accessories, stands, drum shields, and rugs that round out your setup.',
+    icon: '🎛️',
   },
 ];
 

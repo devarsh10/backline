@@ -16,11 +16,9 @@ if (!cat) return Astro.redirect('/');
 
 const allItems = await getEquipmentByCategory(env.DB, category!);
 
-// Some categories pull a second subsection out of the main list —
-// Cymbals under Drums, Stage Accessories under Pianos & Keyboards.
+// Some categories pull a second subsection out of the main list — Cymbals under Drums.
 const subsectionConfig: Record<string, { match: (i: EquipmentItem) => boolean; label: string }> = {
   drums: { match: i => i.subcategory === 'Cymbals', label: 'Cymbals' },
-  keyboards: { match: i => i.subcategory === 'Stage Accessory', label: 'Stage Accessories' },
 };
 const subsection = subsectionConfig[category!];
 const items = subsection ? allItems.filter(i => !subsection.match(i)) : allItems;
