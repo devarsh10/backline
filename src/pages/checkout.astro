@@ -67,29 +67,17 @@ if (!account) return Astro.redirect('/account/login?redirect=/checkout');
               <input class="form-input" type="tel" id="c-phone" name="phone" value={account.phone ?? ''} placeholder="+91 98765 43210" required autocomplete="tel" />
             </div>
           </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label" for="c-email">Email address *</label>
-              <input class="form-input" type="email" id="c-email" name="email" value={account.email} readonly />
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="c-city">City *</label>
-              <select class="form-input" id="c-city" name="city" required>
-                <option value="">Select city</option>
-                <option value="Ahmedabad">Ahmedabad</option>
-                <option value="Surat">Surat</option>
-                <option value="Vadodara">Vadodara</option>
-                <option value="Rajkot">Rajkot</option>
-                <option value="Gandhinagar">Gandhinagar</option>
-                <option value="Other">Other (Gujarat)</option>
-              </select>
-              <input class="form-input" type="text" id="c-city-other" name="city_other" placeholder="Enter your city" style="display:none; margin-top: 8px;" />
-            </div>
-          </div>
           <div class="form-group">
-            <label class="form-label" for="c-venue">Venue / delivery address</label>
-            <input class="form-input" type="text" id="c-venue" name="venue" placeholder="Venue name or address" autocomplete="off" />
-            <p class="field-note">Transportation charges for outstation delivery will be confirmed separately based on exact distance to your venue.</p>
+            <label class="form-label" for="c-email">Email address *</label>
+            <input class="form-input" type="email" id="c-email" name="email" value={account.email} readonly />
+          </div>
+          <div class="form-group" style="position: relative;">
+            <label class="form-label" for="c-address-search">Venue / delivery address *</label>
+            <input class="form-input" type="text" id="c-address-search" placeholder="Start typing your venue address…" autocomplete="off" required />
+            <div id="address-suggestions" class="address-suggestions" style="display:none;"></div>
+            <input type="hidden" id="c-city" name="city" />
+            <input type="hidden" id="c-venue" name="venue" />
+            <p class="field-note">Transportation charge is calculated automatically based on your exact address.</p>
           </div>
           <div class="form-group">
             <label class="form-label" for="c-notes">Additional notes</label>
@@ -160,6 +148,11 @@ if (!account) return Astro.redirect('/account/login?redirect=/checkout');
             <span id="discount-label-text" class="discount-text">Multi-day discount</span>
             <span id="oc-discount" class="discount-text">—</span>
           </div>
+          <div class="summary-line" id="transport-line" style="display:none;">
+            <span>Transportation</span>
+            <span id="oc-transport">—</span>
+          </div>
+          <p class="summary-note" id="transport-note" style="display:none;"></p>
           <div class="summary-line summary-line--days" id="days-line" style="display:none;">
             <span id="oc-days-label"></span>
             <span id="oc-total" class="total-val">—</span>
@@ -207,7 +200,8 @@ if (!account) return Astro.redirect('/account/login?redirect=/checkout');
      scheme instead of defaulting to a black icon that vanishes on dark canvases. */
   .form-input[type="date"], .form-input[type="time"] { color-scheme: dark; }
 
-  .field-note { font-size: 12px; color: var(--color-mute); margin: -8px 0 14px; line-height: 1.5; }
+  .field-note { font-size: 12px; color: var(--color-mute); margin: 6px 0 14px; line-height: 1.5; }
+
   .stage-warning {
     font-size: 13px; color: var(--color-ink); line-height: 1.6; margin: 4px 0 0;
     background-color: var(--color-canvas-soft-2); border-radius: var(--radius-sm);
@@ -277,6 +271,20 @@ if (!account) return Astro.redirect('/account/login?redirect=/checkout');
   .oc-item-name { font-size: 13px; font-weight: 500; color: var(--color-ink); margin: 0 0 1px; }
   .oc-item-meta { font-size: 12px; color: var(--color-mute); margin: 0; }
   .oc-item-price { font-size: 13px; font-weight: 600; color: var(--color-ink); white-space: nowrap; }
+
+  .address-suggestions {
+    position: absolute; top: 74px; left: 0; right: 0; z-index: 20;
+    background-color: var(--color-canvas); border: 1px solid var(--color-hairline-strong);
+    border-radius: var(--radius-md); box-shadow: 0 12px 28px -10px rgba(0,0,0,0.45);
+    max-height: 260px; overflow-y: auto;
+    padding: 6px;
+  }
+  .address-suggestion-item {
+    padding: 12px 14px; font-size: 13.5px; line-height: 1.4; color: var(--color-ink); cursor: pointer;
+    border-radius: var(--radius-sm);
+  }
+  .address-suggestion-item + .address-suggestion-item { margin-top: 2px; }
+  .address-suggestion-item:hover { background-color: var(--color-canvas-soft-2); }
 </style>
 
 <script>
@@ -310,15 +318,126 @@ if (!account) return Astro.redirect('/account/login?redirect=/checkout');
   const subtotalPerDay = getCartSubtotalPerDay();
   document.getElementById('oc-subtotal')!.textContent = `${fp(subtotalPerDay)}/day`;
 
-  // "Other" city toggle
-  const cityInput = document.getElementById('c-city') as HTMLSelectElement;
-  const cityOtherInput = document.getElementById('c-city-other') as HTMLInputElement;
-  cityInput.addEventListener('change', () => {
-    const isOther = cityInput.value === 'Other';
-    cityOtherInput.style.display = isOther ? 'block' : 'none';
-    cityOtherInput.required = isOther;
-    if (!isOther) cityOtherInput.value = '';
+  // Address autocomplete
+  const addressSearch = document.getElementById('c-address-search') as HTMLInputElement;
+  const suggestionsBox = document.getElementById('address-suggestions')!;
+  const cityHidden = document.getElementById('c-city') as HTMLInputElement;
+  const venueHidden = document.getElementById('c-venue') as HTMLInputElement;
+  let autocompleteDebounce: ReturnType<typeof setTimeout>;
+
+  addressSearch.addEventListener('input', () => {
+    // Any manual edit invalidates a previously selected place.
+    cityHidden.value = '';
+    venueHidden.value = '';
+    clearTimeout(autocompleteDebounce);
+    const query = addressSearch.value.trim();
+    if (query.length < 3) {
+      suggestionsBox.style.display = 'none';
+      queueTransportQuote();
+      return;
+    }
+    autocompleteDebounce = setTimeout(async () => {
+      try {
+        const res = await fetch('/api/checkout/place-autocomplete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ input: query }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok || !data.predictions.length) {
+          suggestionsBox.style.display = 'none';
+          return;
+        }
+        suggestionsBox.innerHTML = data.predictions.map((p: any) =>
+          `<div class="address-suggestion-item" data-place-id="${p.placeId}">${p.description}</div>`
+        ).join('');
+        suggestionsBox.style.display = 'block';
+        suggestionsBox.querySelectorAll<HTMLDivElement>('.address-suggestion-item').forEach(item => {
+          item.addEventListener('click', () => selectPlace(item.dataset.placeId!, item.textContent!));
+        });
+      } catch {
+        suggestionsBox.style.display = 'none';
+      }
+    }, 350);
   });
+
+  document.addEventListener('click', (e) => {
+    if (!(e.target as HTMLElement).closest('.form-group')?.contains(addressSearch)) return;
+    if (!suggestionsBox.contains(e.target as Node) && e.target !== addressSearch) {
+      suggestionsBox.style.display = 'none';
+    }
+  });
+
+  async function selectPlace(placeId: string, description: string) {
+    addressSearch.value = description;
+    suggestionsBox.style.display = 'none';
+    try {
+      const res = await fetch('/api/checkout/place-details', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ placeId }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) return;
+      cityHidden.value = data.city;
+      venueHidden.value = data.formattedAddress;
+      queueTransportQuote();
+    } catch {
+      // Leave city/venue blank; transportation charge will be confirmed separately.
+    }
+  }
+
+  // Live transportation quote
+  let transportationCharge = 0;
+  let quoteDebounce: ReturnType<typeof setTimeout>;
+
+  async function fetchTransportQuote() {
+    const city = cityHidden.value;
+    const transportLine = document.getElementById('transport-line')!;
+    const transportNote = document.getElementById('transport-note')!;
+
+    if (!city) {
+      transportLine.style.display = 'none';
+      transportNote.style.display = 'none';
+      transportationCharge = 0;
+      recalc();
+      return;
+    }
+
+    transportLine.style.display = 'none';
+    transportNote.style.display = 'block';
+    transportNote.textContent = 'Calculating transportation charge…';
+
+    try {
+      const res = await fetch('/api/checkout/transportation-quote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ city, venue: venueHidden.value }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        transportationCharge = 0;
+        transportNote.textContent = data.error || 'Could not calculate transportation charge — we will confirm it separately.';
+        recalc();
+        return;
+      }
+      transportationCharge = data.charge;
+      transportLine.style.display = 'flex';
+      document.getElementById('oc-transport')!.textContent = fp(data.charge);
+      transportNote.style.display = data.flatRate ? 'none' : 'block';
+      transportNote.textContent = data.flatRate ? '' : `Approx. ${data.distanceKm} km round trip`;
+      recalc();
+    } catch {
+      transportationCharge = 0;
+      transportNote.textContent = 'Network error calculating transportation — we will confirm it separately.';
+      recalc();
+    }
+  }
+
+  function queueTransportQuote() {
+    clearTimeout(quoteDebounce);
+    quoteDebounce = setTimeout(fetchTransportQuote, 300);
+  }
 
   // Date calculation
   const dateFrom = document.getElementById('date-from') as HTMLInputElement;
@@ -337,7 +456,7 @@ if (!account) return Astro.redirect('/account/login?redirect=/checkout');
     const days = Math.max(1, Math.round((to.getTime() - from.getTime()) / 86400000) + 1);
     const discountPct = getDiscountForDays(days);
     const discountAmt = Math.round(subtotalPerDay * days * discountPct / 100);
-    const total = subtotalPerDay * days - discountAmt;
+    const total = subtotalPerDay * days - discountAmt + transportationCharge;
 
     const datesCalc = document.getElementById('dates-calc')!;
     const discountLabelEl = document.getElementById('dates-discount-label')!;
@@ -396,10 +515,8 @@ if (!account) return Astro.redirect('/account/login?redirect=/checkout');
     const name = (document.getElementById('c-name') as HTMLInputElement).value.trim();
     const phone = (document.getElementById('c-phone') as HTMLInputElement).value.trim();
     const email = (document.getElementById('c-email') as HTMLInputElement).value.trim();
-    const citySelectValue = (document.getElementById('c-city') as HTMLSelectElement).value;
-    const cityOtherValue = (document.getElementById('c-city-other') as HTMLInputElement).value.trim();
-    const city = citySelectValue === 'Other' ? cityOtherValue : citySelectValue;
-    const venue = (document.getElementById('c-venue') as HTMLInputElement).value.trim();
+    const city = cityHidden.value;
+    const venue = venueHidden.value;
     const notes = (document.getElementById('c-notes') as HTMLTextAreaElement).value.trim();
     const stageDimensions = (document.getElementById('c-stage-dims') as HTMLInputElement).value.trim();
     const venueReachTime = (document.getElementById('c-reach-time') as HTMLInputElement).value;
@@ -410,7 +527,7 @@ if (!account) return Astro.redirect('/account/login?redirect=/checkout');
     const toVal = dateTo.value;
 
     if (!name || !phone || !email || !city || !fromVal || !toVal) {
-      alert('Please fill in all required fields (name, phone, email, city, and rental dates).');
+      alert('Please fill in all required fields — including selecting your venue address from the suggestions list.');
       return;
     }
     if (!stageDimensions) {

@@ -35,8 +35,8 @@ export async function insertOrder(
         order_ref, customer_id, customer_name, customer_phone, customer_email, city, venue, notes,
         stage_dimensions, venue_reach_time, backline_ready_time, soundcheck_time, show_end_time,
         rental_start_date, rental_end_date, rental_days, items_json,
-        subtotal_per_day, discount_pct, discount_amount, total_amount
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        subtotal_per_day, discount_pct, discount_amount, transportation_charge, total_amount
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .bind(
       orderRef,
@@ -59,6 +59,7 @@ export async function insertOrder(
       pricing.subtotalPerDay,
       pricing.discountPct,
       pricing.discountAmount,
+      pricing.transportationCharge,
       pricing.totalAmount
     )
     .run();

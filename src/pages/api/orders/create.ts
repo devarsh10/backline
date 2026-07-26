@@ -12,6 +12,7 @@ import { createRazorpayOrder } from '../../../lib/razorpay';
 import { getEquipmentBySlug } from '../../../lib/equipmentDb';
 import { verifyCustomerSessionToken } from '../../../lib/customerAuth';
 import { getCustomerById } from '../../../lib/customerDb';
+import { getTransportationCharge, DistanceError } from '../../../lib/distance';
 
 export const prerender = false;
 
@@ -61,9 +62,19 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   // so order history lookups stay trustworthy.
   customer.email = account.email;
 
+  // Transportation charge is always recalculated server-side from city/venue,
+  // never trusting whatever number the client sent along.
+  let transportationCharge: number;
+  try {
+    transportationCharge = (await getTransportationCharge(env.GOOGLE_MAPS_API_KEY, customer.city, customer.venue)).charge;
+  } catch (err) {
+    if (err instanceof DistanceError) return badRequest(err.message);
+    throw err;
+  }
+
   let pricing;
   try {
-    pricing = await computeOrderPricing(env.DB, items, dates.from, dates.to);
+    pricing = await computeOrderPricing(env.DB, items, dates.from, dates.to, transportationCharge);
   } catch (err) {
     if (err instanceof PricingError) return badRequest(err.message);
     throw err;
@@ -110,6 +121,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
         subtotal_per_day: pricing.subtotalPerDay,
         discount_pct: pricing.discountPct,
         discount_amount: pricing.discountAmount,
+        transportation_charge: pricing.transportationCharge,
         total_amount: pricing.totalAmount,
       }),
       { headers: { 'content-type': 'application/json' } }

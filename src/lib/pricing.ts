@@ -21,6 +21,7 @@ export interface PricingResult {
   subtotalPerDay: number;
   discountPct: number;
   discountAmount: number;
+  transportationCharge: number;
   totalAmount: number;
 }
 
@@ -39,7 +40,8 @@ export async function computeOrderPricing(
   db: D1Database,
   items: OrderLineInput[],
   fromDate: string,
-  toDate: string
+  toDate: string,
+  transportationCharge: number = 0
 ): Promise<PricingResult> {
   if (!items.length) {
     throw new PricingError('Cart is empty');
@@ -73,7 +75,7 @@ export async function computeOrderPricing(
   const discountPct = getDiscountForDays(days);
   const subtotal = subtotalPerDay * days;
   const discountAmount = Math.round((subtotal * discountPct) / 100);
-  const totalAmount = subtotal - discountAmount;
+  const totalAmount = subtotal - discountAmount + transportationCharge;
 
-  return { lines, days, subtotalPerDay, discountPct, discountAmount, totalAmount };
+  return { lines, days, subtotalPerDay, discountPct, discountAmount, transportationCharge, totalAmount };
 }

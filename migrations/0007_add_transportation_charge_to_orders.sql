@@ -1,0 +1,1 @@
+ALTER TABLE orders ADD COLUMN transportation_charge INTEGER NOT NULL DEFAULT 0;
