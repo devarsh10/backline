@@ -40,7 +40,8 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     secure: new URL(request.url).protocol === 'https:',
     sameSite: 'lax',
     path: '/',
-    maxAge: 60 * 60 * 24 * 30,
+    // No maxAge: this is a browser-session cookie, cleared when the browser closes,
+    // rather than persisting the login for 30 days regardless.
   });
 
   return new Response(JSON.stringify({ ok: true }), { headers: { 'content-type': 'application/json' } });
