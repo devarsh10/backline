@@ -73,7 +73,8 @@ export async function getBookedQuantities(
   const { results } = await db
     .prepare(
       `SELECT items_json FROM orders
-       WHERE status != 'cancelled' AND rental_start_date <= ? AND rental_end_date >= ?`
+       WHERE status IN ('payment_received', 'out_for_delivery', 'delivered')
+       AND rental_start_date <= ? AND rental_end_date >= ?`
     )
     .bind(toDate, fromDate)
     .all<{ items_json: string }>();

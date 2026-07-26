@@ -6,6 +6,7 @@ export interface CartItem {
   pricePerDay: number;
   totalUnits: number;
   quantity: number;
+  image?: string;
 }
 
 export function getMaxQuantity(slug: string): number {

@@ -113,6 +113,7 @@ const relatedItems = (await getEquipmentByCategory(env.DB, item.category))
                 data-category={item.category}
                 data-price={item.pricePerDay}
                 data-total-units={item.totalUnits ?? 0}
+                data-image={item.image ?? ''}
               >
                 Add to Cart
               </button>
@@ -178,6 +179,7 @@ const relatedItems = (await getEquipmentByCategory(env.DB, item.category))
                 data-category={acc.category}
                 data-price={acc.pricePerDay}
                 data-total-units={acc.totalUnits ?? 0}
+                data-image={acc.image ?? ''}
                 aria-label={`Add ${acc.name} to cart`}
               >
                 + Add to Cart
@@ -382,6 +384,7 @@ const relatedItems = (await getEquipmentByCategory(env.DB, item.category))
       category: addBtn.dataset.category!,
       pricePerDay: Number(addBtn.dataset.price),
       totalUnits: Number(addBtn.dataset.totalUnits),
+      image: addBtn.dataset.image || undefined,
     });
     addBtn.textContent = '✓ Added to Cart';
     viewCartLink.style.display = 'flex';
@@ -399,6 +402,7 @@ const relatedItems = (await getEquipmentByCategory(env.DB, item.category))
         category: btn.dataset.category!,
         pricePerDay: Number(btn.dataset.price),
         totalUnits: Number(btn.dataset.totalUnits),
+        image: btn.dataset.image || undefined,
       });
       btn.textContent = '✓ Added';
       btn.classList.add('added');

@@ -129,10 +129,24 @@ const faqItems = categoryFaq[category!] ?? [];
                         {item.included.length > 0 && (
                           <p class="card-preview">• {preview}{hasMore ? '…' : ''}</p>
                         )}
-                        <a href={`/equipment/${item.category}/${item.slug}`} class="see-details-btn">
-                          See Details
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
-                        </a>
+                        <div class="card-actions">
+                          <a href={`/equipment/${item.category}/${item.slug}`} class="see-details-btn">
+                            See Details
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+                          </a>
+                          {item.available && (
+                            <div
+                              class="card-add-control"
+                              data-slug={item.slug}
+                              data-name={item.name}
+                              data-brand={item.brand}
+                              data-category={item.category}
+                              data-price={item.pricePerDay}
+                              data-total-units={item.totalUnits ?? 0}
+                              data-image={item.image ?? ''}
+                            />
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
@@ -176,10 +190,24 @@ const faqItems = categoryFaq[category!] ?? [];
                       {item.included.length > 0 && (
                         <p class="card-preview">• {preview}{hasMore ? '…' : ''}</p>
                       )}
-                      <a href={`/equipment/${item.category}/${item.slug}`} class="see-details-btn">
-                        See Details
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
-                      </a>
+                      <div class="card-actions">
+                        <a href={`/equipment/${item.category}/${item.slug}`} class="see-details-btn">
+                          See Details
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+                        </a>
+                        {item.available && (
+                          <div
+                            class="card-add-control"
+                            data-slug={item.slug}
+                            data-name={item.name}
+                            data-brand={item.brand}
+                            data-category={item.category}
+                            data-price={item.pricePerDay}
+                            data-total-units={item.totalUnits ?? 0}
+                            data-image={item.image ?? ''}
+                          />
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
@@ -303,14 +331,14 @@ const faqItems = categoryFaq[category!] ?? [];
     overflow: hidden;
   }
 
-  /* See Details button */
+  /* See Details button + add-to-cart control, side by side */
+  .card-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; flex-wrap: wrap; }
   .see-details-btn {
     display: inline-flex; align-items: center; gap: 5px;
     padding: 8px 18px;
     background-color: #1a8fa8; color: #fff;
     font-size: 13px; font-weight: 500;
     border-radius: 4px; text-decoration: none;
-    margin-top: auto;
     width: fit-content;
     transition: background-color 0.15s;
   }
@@ -330,3 +358,80 @@ const faqItems = categoryFaq[category!] ?? [];
     .items-grid { grid-template-columns: 1fr; gap: 16px; }
   }
 </style>
+
+<!-- is:global: .card-add-control's contents are injected via innerHTML in the script below. -->
+<style is:global>
+  .card-add-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    background-color: var(--color-ink); color: var(--color-on-primary);
+    font-size: 12px; font-weight: 500; padding: 8px 16px;
+    border: none; border-radius: var(--radius-full); cursor: pointer;
+    white-space: nowrap; transition: opacity 0.15s;
+  }
+  .card-add-btn:hover { opacity: 0.85; }
+  .card-add-btn.added { background-color: var(--color-accent-deep); }
+  .card-qty-stepper {
+    display: flex; align-items: center; gap: 0;
+    border: 1px solid var(--color-hairline); border-radius: var(--radius-full);
+    overflow: hidden;
+  }
+  .card-qty-btn {
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    background: none; border: none; cursor: pointer;
+    font-size: 16px; color: var(--color-ink);
+    transition: background-color 0.12s;
+  }
+  .card-qty-btn:hover:not(:disabled) { background-color: var(--color-canvas-soft-2); }
+  .card-qty-btn:disabled { color: var(--color-mute); cursor: not-allowed; opacity: 0.4; }
+  .card-qty-value { min-width: 22px; text-align: center; font-size: 13px; font-weight: 600; color: var(--color-ink); }
+</style>
+
+<script>
+  import { getCart, addToCart, updateQty, updateCartBadge } from '../../scripts/cart';
+
+  function renderAddControl(el: HTMLElement) {
+    const slug = el.dataset.slug!;
+    const totalUnits = Number(el.dataset.totalUnits);
+    const item = getCart().find(i => i.slug === slug);
+    const qty = item?.quantity ?? 0;
+
+    if (qty === 0) {
+      el.innerHTML = `<button type="button" class="card-add-btn">+ Add</button>`;
+      el.querySelector('.card-add-btn')!.addEventListener('click', (e) => {
+        e.preventDefault();
+        addToCart({
+          slug,
+          name: el.dataset.name!,
+          brand: el.dataset.brand!,
+          category: el.dataset.category!,
+          pricePerDay: Number(el.dataset.price),
+          totalUnits,
+          image: el.dataset.image || undefined,
+        });
+        updateCartBadge();
+        renderAddControl(el);
+      });
+    } else {
+      const atMax = qty >= totalUnits;
+      el.innerHTML = `
+        <div class="card-qty-stepper">
+          <button type="button" class="card-qty-btn" data-delta="-1" aria-label="Decrease quantity">−</button>
+          <span class="card-qty-value">${qty}</span>
+          <button type="button" class="card-qty-btn" data-delta="1" ${atMax ? 'disabled' : ''} aria-label="Increase quantity">+</button>
+        </div>
+      `;
+      el.querySelectorAll<HTMLButtonElement>('.card-qty-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const delta = Number(btn.dataset.delta);
+          updateQty(slug, qty + delta);
+          updateCartBadge();
+          renderAddControl(el);
+        });
+      });
+    }
+  }
+
+  document.querySelectorAll<HTMLElement>('.card-add-control').forEach(renderAddControl);
+</script>
