@@ -96,22 +96,22 @@ if (!account) return Astro.redirect('/account/login?redirect=/checkout');
           <div class="form-row">
             <div class="form-group">
               <label class="form-label" for="c-reach-time">Estimated venue reach time</label>
-              <input class="form-input" type="time" id="c-reach-time" name="venue_reach_time" />
+              <select class="form-input" id="c-reach-time" name="venue_reach_time"></select>
             </div>
             <div class="form-group">
               <label class="form-label" for="c-ready-time">Backline should be ready by?</label>
-              <input class="form-input" type="time" id="c-ready-time" name="backline_ready_time" />
+              <select class="form-input" id="c-ready-time" name="backline_ready_time"></select>
             </div>
           </div>
-          <p class="field-note">Setup takes a minimum of 2.5 hours once our crew reaches the venue — please pick a "ready by" time with that in mind.</p>
+          <p class="field-note">Setup takes a minimum of 2 hours once our crew reaches the venue — "ready by" options update automatically once you pick a reach time.</p>
           <div class="form-row">
             <div class="form-group">
               <label class="form-label" for="c-soundcheck-time">Sound &amp; band check time</label>
-              <input class="form-input" type="time" id="c-soundcheck-time" name="soundcheck_time" />
+              <select class="form-input" id="c-soundcheck-time" name="soundcheck_time"></select>
             </div>
             <div class="form-group">
               <label class="form-label" for="c-show-end-time">Estimated show end time</label>
-              <input class="form-input" type="time" id="c-show-end-time" name="show_end_time" />
+              <select class="form-input" id="c-show-end-time" name="show_end_time"></select>
             </div>
           </div>
           <p class="stage-warning"><strong>Stage must be ready to load equipment (carpets, flooring, etc. laid down) before our crew arrives</strong> — otherwise we won't be able to have the backline ready by the requested time.</p>
@@ -194,6 +194,13 @@ if (!account) return Astro.redirect('/account/login?redirect=/checkout');
     box-sizing: border-box; min-width: 0;
   }
   .form-input:focus { border-color: var(--color-ink); outline: none; }
+  select.form-input {
+    padding-right: 34px;
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23787878' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+  }
   .form-textarea { height: auto; padding: 10px 12px; resize: vertical; line-height: 1.5; }
 
   /* Native date/time picker icon: force it to follow the page's light/dark
@@ -506,6 +513,70 @@ if (!account) return Astro.redirect('/account/login?redirect=/checkout');
   dateFrom.min = today;
   dateTo.min = today;
 
+  // Event logistics time pickers — 30-min dropdown slots, each stage constrained
+  // by the previous one (reach -> ready needs a 2hr buffer, then strictly-after
+  // for soundcheck and show end).
+  function timeToMinutes(t: string): number {
+    const [h, m] = t.split(':').map(Number);
+    return h * 60 + m;
+  }
+  function minutesToTime(mins: number): string {
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  }
+  function formatTimeLabel(t: string): string {
+    const [h, m] = t.split(':').map(Number);
+    const period = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 === 0 ? 12 : h % 12;
+    return `${h12}:${String(m).padStart(2, '0')} ${period}`;
+  }
+
+  const ALL_TIME_SLOTS: string[] = [];
+  for (let mins = 6 * 60; mins <= 23 * 60 + 30; mins += 30) {
+    ALL_TIME_SLOTS.push(minutesToTime(mins));
+  }
+
+  function populateTimeSelect(select: HTMLSelectElement, minExclusive: number | null, minInclusive: number | null) {
+    const prevValue = select.value;
+    const options = ALL_TIME_SLOTS.filter(t => {
+      const mins = timeToMinutes(t);
+      if (minInclusive !== null && mins < minInclusive) return false;
+      if (minExclusive !== null && mins <= minExclusive) return false;
+      return true;
+    });
+    select.innerHTML = '<option value="">Select time</option>' +
+      options.map(t => `<option value="${t}">${formatTimeLabel(t)}</option>`).join('');
+    select.value = options.includes(prevValue) ? prevValue : '';
+  }
+
+  const reachSelect = document.getElementById('c-reach-time') as HTMLSelectElement;
+  const readySelect = document.getElementById('c-ready-time') as HTMLSelectElement;
+  const soundcheckSelect = document.getElementById('c-soundcheck-time') as HTMLSelectElement;
+  const showEndSelect = document.getElementById('c-show-end-time') as HTMLSelectElement;
+
+  function updateReadyOptions() {
+    const minInclusive = reachSelect.value ? timeToMinutes(reachSelect.value) + 120 : null;
+    populateTimeSelect(readySelect, null, minInclusive);
+    updateSoundcheckOptions();
+  }
+  function updateSoundcheckOptions() {
+    const minExclusive = readySelect.value ? timeToMinutes(readySelect.value) : null;
+    populateTimeSelect(soundcheckSelect, minExclusive, null);
+    updateShowEndOptions();
+  }
+  function updateShowEndOptions() {
+    const minExclusive = soundcheckSelect.value ? timeToMinutes(soundcheckSelect.value) : null;
+    populateTimeSelect(showEndSelect, minExclusive, null);
+  }
+
+  populateTimeSelect(reachSelect, null, null);
+  updateReadyOptions();
+
+  reachSelect.addEventListener('change', updateReadyOptions);
+  readySelect.addEventListener('change', updateSoundcheckOptions);
+  soundcheckSelect.addEventListener('change', updateShowEndOptions);
+
   declare global {
     interface Window {
       Razorpay: any;
@@ -526,10 +597,10 @@ if (!account) return Astro.redirect('/account/login?redirect=/checkout');
     const venue = venueHidden.value;
     const notes = (document.getElementById('c-notes') as HTMLTextAreaElement).value.trim();
     const stageDimensions = (document.getElementById('c-stage-dims') as HTMLInputElement).value.trim();
-    const venueReachTime = (document.getElementById('c-reach-time') as HTMLInputElement).value;
-    const backlineReadyTime = (document.getElementById('c-ready-time') as HTMLInputElement).value;
-    const soundcheckTime = (document.getElementById('c-soundcheck-time') as HTMLInputElement).value;
-    const showEndTime = (document.getElementById('c-show-end-time') as HTMLInputElement).value;
+    const venueReachTime = (document.getElementById('c-reach-time') as HTMLSelectElement).value;
+    const backlineReadyTime = (document.getElementById('c-ready-time') as HTMLSelectElement).value;
+    const soundcheckTime = (document.getElementById('c-soundcheck-time') as HTMLSelectElement).value;
+    const showEndTime = (document.getElementById('c-show-end-time') as HTMLSelectElement).value;
     const fromVal = dateFrom.value;
     const toVal = dateTo.value;
 
