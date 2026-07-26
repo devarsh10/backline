@@ -490,14 +490,21 @@ if (!account) return Astro.redirect('/account/login?redirect=/checkout');
     noteEl.textContent = `${from.toLocaleDateString('en-IN', opts)} – ${to.toLocaleDateString('en-IN', opts)}`;
   }
 
-  dateFrom.addEventListener('change', recalc);
+  dateFrom.addEventListener('change', () => {
+    // Default End date to match Start date (covers the common 1-day booking
+    // case with no extra input) unless an existing End date is still valid.
+    if (!dateTo.value || new Date(dateTo.value) < new Date(dateFrom.value)) {
+      dateTo.value = dateFrom.value;
+    }
+    dateTo.min = dateFrom.value;
+    recalc();
+  });
   dateTo.addEventListener('change', recalc);
 
   // Set minimum date to today
   const today = new Date().toISOString().split('T')[0];
   dateFrom.min = today;
   dateTo.min = today;
-  dateFrom.addEventListener('change', () => { dateTo.min = dateFrom.value; });
 
   declare global {
     interface Window {
