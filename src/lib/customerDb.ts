@@ -5,6 +5,7 @@ export interface CustomerRow {
   name: string;
   phone: string | null;
   email_verified: number;
+  pending_email: string | null;
 }
 
 export async function createCustomer(
@@ -35,6 +36,30 @@ export async function markCustomerEmailVerified(db: D1Database, email: string): 
   await db
     .prepare(`UPDATE customers SET email_verified = 1, updated_at = datetime('now') WHERE email = ?`)
     .bind(email)
+    .run();
+}
+
+export async function updateCustomerProfile(db: D1Database, id: number, name: string, phone: string | undefined): Promise<void> {
+  await db
+    .prepare(`UPDATE customers SET name = ?, phone = ?, updated_at = datetime('now') WHERE id = ?`)
+    .bind(name, phone ?? null, id)
+    .run();
+}
+
+export async function setPendingEmail(db: D1Database, id: number, pendingEmail: string): Promise<void> {
+  await db
+    .prepare(`UPDATE customers SET pending_email = ?, updated_at = datetime('now') WHERE id = ?`)
+    .bind(pendingEmail, id)
+    .run();
+}
+
+export async function confirmPendingEmail(db: D1Database, id: number): Promise<void> {
+  await db
+    .prepare(
+      `UPDATE customers SET email = pending_email, pending_email = NULL, updated_at = datetime('now')
+       WHERE id = ? AND pending_email IS NOT NULL`
+    )
+    .bind(id)
     .run();
 }
 

@@ -61,7 +61,7 @@ export function contactMessageEmailHtml(name: string, phone: string, email: stri
 }
 
 export function paymentReceivedEmailHtml(orderRef: string, customerName: string, totalAmount: number): string {
-  const trackUrl = `https://backlineindia.com/account/orders`;
+  const trackUrl = `https://backlineindia.com/account`;
   return `
     <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
       <h2>Payment received — thank you, ${customerName}!</h2>
