@@ -11,3 +11,9 @@ ADMIN_PASSWORD=change-me
 ADMIN_SESSION_SECRET=change-me-too
 # Random secret used to sign customer account session cookies (any long random string).
 CUSTOMER_SESSION_SECRET=change-me-too-please
+
+# Google OAuth client (Google Cloud Console > APIs & Services > Credentials).
+# Authorized redirect URI must be <origin>/api/account/google-callback for both
+# local (http://localhost:4321) and production (https://backlineindia.com).
+GOOGLE_OAUTH_CLIENT_ID=xxxxxxxxxxxx.apps.googleusercontent.com
+GOOGLE_OAUTH_CLIENT_SECRET=xxxxxxxxxxxxxxxxxxxxxxxx

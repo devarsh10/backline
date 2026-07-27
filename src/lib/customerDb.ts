@@ -22,6 +22,20 @@ export async function createCustomer(
   return result.meta.last_row_id as number;
 }
 
+export async function createVerifiedCustomer(
+  db: D1Database,
+  email: string,
+  passwordHash: string,
+  name: string,
+  phone: string | undefined
+): Promise<number> {
+  const result = await db
+    .prepare(`INSERT INTO customers (email, password_hash, name, phone, email_verified) VALUES (?, ?, ?, ?, 1)`)
+    .bind(email, passwordHash, name, phone ?? null)
+    .run();
+  return result.meta.last_row_id as number;
+}
+
 export async function getCustomerByEmail(db: D1Database, email: string): Promise<CustomerRow | null> {
   const row = await db.prepare(`SELECT * FROM customers WHERE email = ?`).bind(email).first<CustomerRow>();
   return row ?? null;
