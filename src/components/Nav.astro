@@ -1,10 +1,12 @@
 ---
 import { env } from 'cloudflare:workers';
 import { getAllEquipment } from '../lib/equipmentDb';
+import { RENTAL_DATES_COOKIE, parseRentalDatesCookie, formatDateRangeShort } from '../lib/rentalDates';
 
 const equipment = await getAllEquipment(env.DB);
 
 const currentPath = Astro.url.pathname;
+const rentalDates = parseRentalDatesCookie(Astro.cookies.get(RENTAL_DATES_COOKIE)?.value);
 
 const navCategories = [
   { href: '/equipment/drums',             label: 'Drum Kits & Cymbals' },
@@ -54,8 +56,6 @@ const searchIndex = equipment.map(({ slug, name, brand, category, subcategory, p
           </div>
         </div>
       </div>
-
-      <a href="/about" class={`nav-link ${isActive('/about') ? 'active' : ''}`}>About</a>
     </nav>
 
     <!-- Right cluster -->
@@ -81,7 +81,26 @@ const searchIndex = equipment.map(({ slug, name, brand, category, subcategory, p
         <div class="nav-search-results" id="nav-search-results"></div>
       </div>
 
-      <a href="/contact" class="btn-secondary btn-sm">Contact</a>
+      <!-- Rental dates pill -->
+      <div class="nav-dates-group" id="nav-dates-group">
+        <button type="button" class="nav-dates-pill" id="nav-dates-trigger" aria-haspopup="true" aria-expanded="false">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span id="nav-dates-label">{rentalDates ? formatDateRangeShort(rentalDates) : 'Select dates'}</span>
+        </button>
+        <div class="nav-dates-menu" role="menu">
+          <div class="nav-dates-menu-inner">
+            <div class="nav-dates-field">
+              <label for="nav-date-from">Start date</label>
+              <input type="date" id="nav-date-from" value={rentalDates?.from ?? ''} />
+            </div>
+            <div class="nav-dates-field">
+              <label for="nav-date-to">End date</label>
+              <input type="date" id="nav-date-to" value={rentalDates?.to ?? ''} />
+            </div>
+            <button type="button" class="btn-primary btn-sm nav-dates-update" id="nav-dates-update">Update dates</button>
+          </div>
+        </div>
+      </div>
 
       <!-- Account button -->
       <a href="/account" class={`nav-account-btn ${isActive('/account') ? 'active' : ''}`} aria-label="My account">
@@ -203,6 +222,37 @@ const searchIndex = equipment.map(({ slug, name, brand, category, subcategory, p
 
   .nav-cta-cluster { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-shrink: 0; }
 
+  /* Rental dates pill */
+  .nav-dates-group { position: relative; }
+  .nav-dates-pill {
+    display: flex; align-items: center; gap: 6px;
+    background-color: var(--color-canvas-soft-2); border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-full); padding: 6px 12px; cursor: pointer;
+    font-size: 12px; font-weight: 500; color: var(--color-body); font-family: var(--font-sans);
+    white-space: nowrap;
+  }
+  .nav-dates-pill:hover { border-color: var(--color-hairline-strong); color: var(--color-ink); }
+  .nav-dates-menu {
+    position: absolute; top: 100%; right: 0;
+    padding-top: 8px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.15s;
+    z-index: 200; min-width: 220px;
+  }
+  .nav-dates-group.open .nav-dates-menu { opacity: 1; pointer-events: auto; }
+  .nav-dates-menu-inner {
+    background-color: var(--color-canvas); border: 1px solid var(--color-hairline); border-radius: var(--radius-md);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.10); padding: 14px; display: flex; flex-direction: column; gap: 10px;
+  }
+  .nav-dates-field { display: flex; flex-direction: column; gap: 4px; }
+  .nav-dates-field label { font-size: 11px; color: var(--color-mute); }
+  .nav-dates-field input {
+    background-color: var(--color-canvas); border: 1px solid var(--color-hairline); border-radius: var(--radius-sm);
+    color: var(--color-ink); font-size: 13px; font-family: var(--font-sans); height: 34px; padding: 0 8px;
+    color-scheme: dark; width: 100%;
+  }
+  .nav-dates-update { width: 100%; justify-content: center; }
+
   /* Global search */
   .nav-search { position: relative; display: flex; align-items: center; }
   .nav-search-toggle {
@@ -311,7 +361,6 @@ const searchIndex = equipment.map(({ slug, name, brand, category, subcategory, p
 
   @media (max-width: 768px) {
     .nav-links { display: none; }
-    .nav-cta-cluster .btn-secondary { display: none; }
     .nav-menu-btn { display: flex; }
   }
   @media (max-width: 640px) {
@@ -324,6 +373,8 @@ const searchIndex = equipment.map(({ slug, name, brand, category, subcategory, p
     }
     .nav-search.open .nav-search-toggle { display: none; }
     .nav-search-results { width: 280px; right: -8px; }
+    .nav-dates-pill span { display: none; }
+    .nav-dates-menu { right: -40px; }
   }
 </style>
 
@@ -353,6 +404,37 @@ const searchIndex = equipment.map(({ slug, name, brand, category, subcategory, p
       dropdownGroup.classList.remove('open');
       dropdownTrigger?.setAttribute('aria-expanded', 'false');
     }
+  });
+
+  // Rental dates pill
+  const datesGroup = document.getElementById('nav-dates-group');
+  const datesTrigger = document.getElementById('nav-dates-trigger');
+  const datesFrom = document.getElementById('nav-date-from') as HTMLInputElement;
+  const datesTo = document.getElementById('nav-date-to') as HTMLInputElement;
+  const datesUpdateBtn = document.getElementById('nav-dates-update');
+
+  const todayIso = new Date().toISOString().slice(0, 10);
+  datesFrom.min = todayIso;
+  datesTo.min = datesFrom.value || todayIso;
+
+  datesTrigger?.addEventListener('click', () => {
+    const isOpen = datesGroup?.classList.toggle('open');
+    datesTrigger.setAttribute('aria-expanded', String(isOpen));
+  });
+  document.addEventListener('click', (e) => {
+    if (datesGroup && !datesGroup.contains(e.target as Node)) {
+      datesGroup.classList.remove('open');
+      datesTrigger?.setAttribute('aria-expanded', 'false');
+    }
+  });
+  datesFrom.addEventListener('change', () => {
+    if (!datesTo.value || datesTo.value < datesFrom.value) datesTo.value = datesFrom.value;
+    datesTo.min = datesFrom.value;
+  });
+  datesUpdateBtn?.addEventListener('click', () => {
+    if (!datesFrom.value || !datesTo.value) return;
+    document.cookie = `rental_dates=${datesFrom.value}_${datesTo.value}; path=/; max-age=${60 * 60 * 24 * 90}; SameSite=Lax`;
+    window.location.reload();
   });
 
   // Global search

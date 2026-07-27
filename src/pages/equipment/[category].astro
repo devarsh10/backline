@@ -4,6 +4,8 @@ import Layout from '../../layouts/Layout.astro';
 import FAQ from '../../components/FAQ.astro';
 import { getCategoryBySlug } from '../../data/equipment';
 import { getEquipmentByCategory } from '../../lib/equipmentDb';
+import { getBookedQuantities } from '../../lib/db';
+import { RENTAL_DATES_COOKIE, parseRentalDatesCookie, formatDateRangeShort, remainingUnitsFor } from '../../lib/rentalDates';
 import { categoryFaq } from '../../data/faq';
 import type { EquipmentItem } from '../../data/equipment';
 
@@ -15,6 +17,18 @@ const cat = getCategoryBySlug(category!);
 if (!cat) return Astro.redirect('/');
 
 const allItems = await getEquipmentByCategory(env.DB, category!);
+
+// If the customer picked rental dates (homepage or nav pill), show real
+// date-aware availability instead of the generic "do we own any units" flag.
+const rentalDates = parseRentalDatesCookie(Astro.cookies.get(RENTAL_DATES_COOKIE)?.value);
+const bookedQuantities = rentalDates ? await getBookedQuantities(env.DB, rentalDates.from, rentalDates.to) : null;
+
+function remainingUnits(item: EquipmentItem): number {
+  return remainingUnitsFor(item.totalUnits ?? 0, item.slug, bookedQuantities);
+}
+function isAvailable(item: EquipmentItem): boolean {
+  return remainingUnits(item) > 0;
+}
 
 // Some categories pull a second subsection out of the main list — Cymbals under Drums.
 const subsectionConfig: Record<string, { match: (i: EquipmentItem) => boolean; label: string }> = {
@@ -35,7 +49,7 @@ function groupAndSort(list: EquipmentItem[]) {
     acc[key].push(item);
     return acc;
   }, {} as Record<string, EquipmentItem[]>);
-  Object.values(groups).forEach(g => g.sort((a, b) => Number(b.available) - Number(a.available)));
+  Object.values(groups).forEach(g => g.sort((a, b) => Number(isAvailable(b)) - Number(isAvailable(a))));
   return groups;
 }
 
@@ -82,6 +96,9 @@ const faqItems = categoryFaq[category!] ?? [];
 
   <!-- Items -->
   <div class="page-container">
+    {rentalDates && (
+      <p class="dates-availability-note">Showing availability for <strong>{formatDateRangeShort(rentalDates)}</strong> — change dates from the calendar icon in the nav bar.</p>
+    )}
     {items.length === 0 && subsectionItems.length === 0 ? (
       <div class="empty-state">
         <h2 class="display-sm">Coming soon.</h2>
@@ -102,7 +119,7 @@ const faqItems = categoryFaq[category!] ?? [];
                   const preview = item.included.slice(0, 4).join(' • ');
                   const hasMore = item.included.length > 4;
                   return (
-                    <div class={`item-card ${!item.available ? 'item-card--unavailable' : ''}`}>
+                    <div class={`item-card ${!isAvailable(item) ? 'item-card--unavailable' : ''}`}>
                       <a href={`/equipment/${item.category}/${item.slug}`} class="card-img-link">
                         <div class="card-img">
                           {item.image ? (
@@ -114,7 +131,7 @@ const faqItems = categoryFaq[category!] ?? [];
                               </svg>
                             </div>
                           )}
-                          {!item.available ? (
+                          {!isAvailable(item) ? (
                             <span class="unavail-badge">Unavailable</span>
                           ) : item.featured && <span class="card-badge">Popular</span>}
                         </div>
@@ -132,7 +149,7 @@ const faqItems = categoryFaq[category!] ?? [];
                             See Details
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
                           </a>
-                          {item.available && (
+                          {isAvailable(item) && (
                             <div
                               class="card-add-control"
                               data-slug={item.slug}
@@ -140,7 +157,7 @@ const faqItems = categoryFaq[category!] ?? [];
                               data-brand={item.brand}
                               data-category={item.category}
                               data-price={item.pricePerDay}
-                              data-total-units={item.totalUnits ?? 0}
+                              data-total-units={remainingUnits(item)}
                               data-image={item.image ?? ''}
                             />
                           )}
@@ -165,7 +182,7 @@ const faqItems = categoryFaq[category!] ?? [];
                 const preview = item.included.slice(0, 4).join(' • ');
                 const hasMore = item.included.length > 4;
                 return (
-                  <div class={`item-card ${!item.available ? 'item-card--unavailable' : ''}`}>
+                  <div class={`item-card ${!isAvailable(item) ? 'item-card--unavailable' : ''}`}>
                     <a href={`/equipment/${item.category}/${item.slug}`} class="card-img-link">
                       <div class="card-img">
                         {item.image ? (
@@ -177,7 +194,7 @@ const faqItems = categoryFaq[category!] ?? [];
                             </svg>
                           </div>
                         )}
-                        {!item.available && <span class="unavail-badge">Unavailable</span>}
+                        {!isAvailable(item) && <span class="unavail-badge">Unavailable</span>}
                       </div>
                     </a>
                     <div class="card-body">
@@ -193,7 +210,7 @@ const faqItems = categoryFaq[category!] ?? [];
                           See Details
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
                         </a>
-                        {item.available && (
+                        {isAvailable(item) && (
                           <div
                             class="card-add-control"
                             data-slug={item.slug}
@@ -201,7 +218,7 @@ const faqItems = categoryFaq[category!] ?? [];
                             data-brand={item.brand}
                             data-category={item.category}
                             data-price={item.pricePerDay}
-                            data-total-units={item.totalUnits ?? 0}
+                            data-total-units={remainingUnits(item)}
                             data-image={item.image ?? ''}
                           />
                         )}
@@ -244,6 +261,11 @@ const faqItems = categoryFaq[category!] ?? [];
 
   /* Content */
   .page-container { max-width: 1280px; margin: 0 auto; padding: 56px 32px 80px; }
+  .dates-availability-note {
+    font-size: 13px; color: var(--color-body); background-color: var(--color-canvas-soft-2);
+    border: 1px solid var(--color-hairline); border-radius: var(--radius-md); padding: 10px 16px; margin-bottom: 24px;
+  }
+  .dates-availability-note strong { color: var(--color-ink); }
   .brands-container { display: flex; flex-direction: column; gap: 64px; }
 
   /* Brand section */

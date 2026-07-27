@@ -4,6 +4,8 @@ import Layout from '../../../layouts/Layout.astro';
 import EquipmentCard from '../../../components/EquipmentCard.astro';
 import { getCategoryBySlug } from '../../../data/equipment';
 import { getEquipmentBySlug, getEquipmentBySlugs, getEquipmentByCategory } from '../../../lib/equipmentDb';
+import { getBookedQuantities } from '../../../lib/db';
+import { RENTAL_DATES_COOKIE, parseRentalDatesCookie, remainingUnitsFor, formatDateRangeShort } from '../../../lib/rentalDates';
 
 export const prerender = false;
 
@@ -16,6 +18,11 @@ const accessories = item.relatedAccessorySlugs ? await getEquipmentBySlugs(env.D
 const relatedItems = (await getEquipmentByCategory(env.DB, item.category))
   .filter(e => e.slug !== item.slug && !item.relatedAccessorySlugs?.includes(e.slug))
   .slice(0, 3);
+
+const rentalDates = parseRentalDatesCookie(Astro.cookies.get(RENTAL_DATES_COOKIE)?.value);
+const bookedQuantities = rentalDates ? await getBookedQuantities(env.DB, rentalDates.from, rentalDates.to) : null;
+const itemUnitsAvailable = remainingUnitsFor(item.totalUnits ?? 0, item.slug, bookedQuantities);
+const itemIsAvailable = itemUnitsAvailable > 0;
 ---
 
 <Layout
@@ -89,6 +96,14 @@ const relatedItems = (await getEquipmentByCategory(env.DB, item.category))
             </div>
           )}
 
+          {rentalDates && (
+            <p class="dates-availability-note">
+              {itemIsAvailable
+                ? `${itemUnitsAvailable} available for ${formatDateRangeShort(rentalDates)}`
+                : `Not available for ${formatDateRangeShort(rentalDates)}`}
+            </p>
+          )}
+
           <!-- Rental terms -->
           <div class="terms-row">
             <div class="term-cell">
@@ -102,7 +117,7 @@ const relatedItems = (await getEquipmentByCategory(env.DB, item.category))
           </div>
 
           <!-- Add to cart -->
-          {item.available ? (
+          {itemIsAvailable ? (
             <>
               <button
                 class="btn-primary add-btn"
@@ -112,7 +127,7 @@ const relatedItems = (await getEquipmentByCategory(env.DB, item.category))
                 data-brand={item.brand}
                 data-category={item.category}
                 data-price={item.pricePerDay}
-                data-total-units={item.totalUnits ?? 0}
+                data-total-units={itemUnitsAvailable}
                 data-image={item.image ?? ''}
               >
                 Add to Cart
@@ -197,7 +212,12 @@ const relatedItems = (await getEquipmentByCategory(env.DB, item.category))
         <h2 class="related-title">More {cat?.name}</h2>
         <div class="related-grid">
           {relatedItems.map(r => (
-            <EquipmentCard item={r} compact />
+            <EquipmentCard
+              item={r}
+              compact
+              unitsAvailable={remainingUnitsFor(r.totalUnits ?? 0, r.slug, bookedQuantities)}
+              available={remainingUnitsFor(r.totalUnits ?? 0, r.slug, bookedQuantities) > 0}
+            />
           ))}
         </div>
       </div>
@@ -283,6 +303,11 @@ const relatedItems = (await getEquipmentByCategory(env.DB, item.category))
     font-size: 14px; color: var(--color-body); line-height: 1.4;
   }
   .included-item svg { color: var(--color-accent-deep); flex-shrink: 0; margin-top: 2px; }
+
+  .dates-availability-note {
+    font-size: 13px; color: var(--color-body); background-color: var(--color-canvas-soft-2);
+    border: 1px solid var(--color-hairline); border-radius: var(--radius-md); padding: 8px 14px; margin: 0 0 16px;
+  }
 
   /* Terms */
   .terms-row { display: flex; gap: 0; margin-bottom: 24px; border: 1px solid var(--color-hairline); border-radius: var(--radius-md); overflow: hidden; }

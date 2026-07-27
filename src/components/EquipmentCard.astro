@@ -4,12 +4,16 @@ import type { EquipmentItem } from '../data/equipment';
 interface Props {
   item: EquipmentItem;
   compact?: boolean;
+  available?: boolean;
+  unitsAvailable?: number;
 }
 
-const { item, compact = false } = Astro.props;
+const { item, compact = false, available, unitsAvailable } = Astro.props;
+const isAvailable = available ?? item.available;
+const totalUnits = unitsAvailable ?? (item.totalUnits ?? 0);
 ---
 
-<div class={`gear-card ${compact ? 'gear-card--compact' : ''} ${!item.available ? 'gear-card--unavailable' : ''}`}>
+<div class={`gear-card ${compact ? 'gear-card--compact' : ''} ${!isAvailable ? 'gear-card--unavailable' : ''}`}>
   <!-- Image -->
   <a href={`/equipment/${item.category}/${item.slug}`} class="gear-card-img-link" tabindex="-1" aria-hidden="true">
     <div class="gear-card-img">
@@ -22,7 +26,7 @@ const { item, compact = false } = Astro.props;
           </svg>
         </div>
       )}
-      {!item.available ? (
+      {!isAvailable ? (
         <span class="gear-unavail-badge">Unavailable</span>
       ) : item.featured && <span class="gear-featured-badge">Featured</span>}
     </div>
@@ -39,7 +43,7 @@ const { item, compact = false } = Astro.props;
     </a>
     <div class="gear-card-footer">
       <span class="gear-price">₹{item.pricePerDay.toLocaleString('en-IN')}<span class="gear-price-unit">/day</span></span>
-      {item.available ? (
+      {isAvailable ? (
         <button
           class="add-to-cart-btn"
           data-slug={item.slug}
@@ -47,7 +51,7 @@ const { item, compact = false } = Astro.props;
           data-brand={item.brand}
           data-category={item.category}
           data-price={item.pricePerDay}
-          data-total-units={item.totalUnits ?? 0}
+          data-total-units={totalUnits}
           data-image={item.image ?? ''}
           aria-label={`Add ${item.name} to cart`}
         >

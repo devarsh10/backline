@@ -5,11 +5,16 @@ import EquipmentCard from '../components/EquipmentCard.astro';
 import FAQ from '../components/FAQ.astro';
 import { categories } from '../data/equipment';
 import { getFeaturedEquipment } from '../lib/equipmentDb';
+import { getBookedQuantities } from '../lib/db';
+import { RENTAL_DATES_COOKIE, parseRentalDatesCookie, remainingUnitsFor } from '../lib/rentalDates';
 import { generalFaq, paymentFaq } from '../data/faq';
 
 export const prerender = false;
 
 const featured = await getFeaturedEquipment(env.DB);
+
+const rentalDates = parseRentalDatesCookie(Astro.cookies.get(RENTAL_DATES_COOKIE)?.value);
+const bookedQuantities = rentalDates ? await getBookedQuantities(env.DB, rentalDates.from, rentalDates.to) : null;
 ---
 
 <Layout
@@ -30,8 +35,20 @@ const featured = await getFeaturedEquipment(env.DB);
       <p class="body-lg hero-sub">
         Rent drum kits, cymbals, amplifiers, and digital pianos for concerts, events, and studios across Gujarat. Transparent pricing, no hidden costs.
       </p>
-      <div class="hero-cta-row">
-        <a href="/#categories" class="btn-primary">Browse Equipment</a>
+      <div class="hero-dates-card">
+        <p class="hero-dates-label">When do you need equipment?</p>
+        <form id="hero-dates-form" class="hero-dates-form">
+          <div class="hero-dates-field">
+            <label for="hero-date-from">Start date</label>
+            <input type="date" id="hero-date-from" required />
+          </div>
+          <div class="hero-dates-field">
+            <label for="hero-date-to">End date</label>
+            <input type="date" id="hero-date-to" required />
+          </div>
+          <button type="submit" class="btn-primary hero-dates-submit">Browse Equipment</button>
+        </form>
+        <a href="/#categories" class="hero-dates-skip" id="hero-dates-skip">Skip — I'll pick dates at checkout →</a>
       </div>
       <div class="hero-trust-row">
         <span class="hero-trust-item">
@@ -93,7 +110,11 @@ const featured = await getFeaturedEquipment(env.DB);
 
       <div class="gear-grid">
         {featured.map((item) => (
-          <EquipmentCard item={item} />
+          <EquipmentCard
+            item={item}
+            unitsAvailable={remainingUnitsFor(item.totalUnits ?? 0, item.slug, bookedQuantities)}
+            available={remainingUnitsFor(item.totalUnits ?? 0, item.slug, bookedQuantities) > 0}
+          />
         ))}
       </div>
 
@@ -219,6 +240,22 @@ const featured = await getFeaturedEquipment(env.DB);
   }
   .hero-cta-row .btn-secondary:hover { background-color: rgba(255,255,255,0.10); border-color: rgba(255,255,255,0.55); }
 
+  .hero-dates-card {
+    background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.20); border-radius: var(--radius-lg);
+    padding: 20px 24px; margin-bottom: 28px; backdrop-filter: blur(4px); max-width: 560px; width: 100%;
+  }
+  .hero-dates-label { color: #fff; font-size: 13px; font-weight: 600; margin: 0 0 12px; text-align: left; }
+  .hero-dates-form { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+  .hero-dates-field { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 130px; text-align: left; }
+  .hero-dates-field label { font-size: 11px; color: rgba(255,255,255,0.70); }
+  .hero-dates-field input {
+    background-color: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.25); border-radius: var(--radius-sm);
+    color: #fff; font-size: 14px; font-family: var(--font-sans); height: 40px; padding: 0 10px; width: 100%; color-scheme: dark;
+  }
+  .hero-dates-submit { white-space: nowrap; }
+  .hero-dates-skip { display: block; margin-top: 10px; font-size: 12px; color: rgba(255,255,255,0.65); text-decoration: underline; }
+  .hero-dates-skip:hover { color: #fff; }
+
   /* Scroll hint arrow at the bottom of hero */
   .hero-scroll-hint {
     position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
@@ -301,3 +338,32 @@ const featured = await getFeaturedEquipment(env.DB);
     .section-header { margin-bottom: 32px; }
   }
 </style>
+
+<script>
+  import { RENTAL_DATES_COOKIE } from '../lib/rentalDates';
+
+  const form = document.getElementById('hero-dates-form') as HTMLFormElement;
+  const dateFrom = document.getElementById('hero-date-from') as HTMLInputElement;
+  const dateTo = document.getElementById('hero-date-to') as HTMLInputElement;
+  const skipLink = document.getElementById('hero-dates-skip') as HTMLAnchorElement;
+
+  const today = new Date().toISOString().slice(0, 10);
+  dateFrom.min = today;
+  dateTo.min = today;
+
+  dateFrom.addEventListener('change', () => {
+    if (!dateTo.value || dateTo.value < dateFrom.value) dateTo.value = dateFrom.value;
+    dateTo.min = dateFrom.value;
+  });
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!dateFrom.value || !dateTo.value) return;
+    document.cookie = `${RENTAL_DATES_COOKIE}=${dateFrom.value}_${dateTo.value}; path=/; max-age=${60 * 60 * 24 * 90}; SameSite=Lax`;
+    window.location.href = '/#categories';
+  });
+
+  skipLink.addEventListener('click', () => {
+    document.cookie = `${RENTAL_DATES_COOKIE}=; path=/; max-age=0`;
+  });
+</script>

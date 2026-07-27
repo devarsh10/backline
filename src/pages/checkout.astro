@@ -4,6 +4,7 @@ import { env } from 'cloudflare:workers';
 import Layout from '../layouts/Layout.astro';
 import { verifyCustomerSessionToken } from '../lib/customerAuth';
 import { getCustomerById } from '../lib/customerDb';
+import { RENTAL_DATES_COOKIE, parseRentalDatesCookie } from '../lib/rentalDates';
 
 const sessionToken = Astro.cookies.get('customer_session')?.value;
 const customerId = await verifyCustomerSessionToken(sessionToken, env.CUSTOMER_SESSION_SECRET);
@@ -11,6 +12,8 @@ if (!customerId) return Astro.redirect('/account/login?redirect=/checkout');
 
 const account = await getCustomerById(env.DB, customerId);
 if (!account) return Astro.redirect('/account/login?redirect=/checkout');
+
+const rentalDates = parseRentalDatesCookie(Astro.cookies.get(RENTAL_DATES_COOKIE)?.value);
 ---
 
 <Layout
@@ -41,11 +44,11 @@ if (!account) return Astro.redirect('/account/login?redirect=/checkout');
           <div class="form-row">
             <div class="form-group">
               <label class="form-label" for="date-from">Start date *</label>
-              <input class="form-input" type="date" id="date-from" name="date_from" required />
+              <input class="form-input" type="date" id="date-from" name="date_from" value={rentalDates?.from ?? ''} required />
             </div>
             <div class="form-group">
               <label class="form-label" for="date-to">End date *</label>
-              <input class="form-input" type="date" id="date-to" name="date_to" required />
+              <input class="form-input" type="date" id="date-to" name="date_to" value={rentalDates?.to ?? ''} required />
             </div>
           </div>
           <div class="dates-calc" id="dates-calc" style="display:none;">
@@ -106,7 +109,7 @@ if (!account) return Astro.redirect('/account/login?redirect=/checkout');
           <p class="field-note">Setup takes a minimum of 2 hours once our crew reaches the venue — "ready by" options update automatically once you pick a reach time.</p>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label" for="c-soundcheck-time">Sound &amp; band check time</label>
+              <label class="form-label" for="c-soundcheck-time">Sound check start time</label>
               <select class="form-input" id="c-soundcheck-time" name="soundcheck_time"></select>
             </div>
             <div class="form-group">
@@ -511,7 +514,11 @@ if (!account) return Astro.redirect('/account/login?redirect=/checkout');
   // Set minimum date to today
   const today = new Date().toISOString().split('T')[0];
   dateFrom.min = today;
-  dateTo.min = today;
+  dateTo.min = dateFrom.value || today;
+
+  // Dates may already be pre-filled server-side from the rental_dates cookie
+  // (set on the homepage or via the nav dates pill) — reflect that in the summary.
+  if (dateFrom.value && dateTo.value) recalc();
 
   // Event logistics time pickers — 30-min dropdown slots, each stage constrained
   // by the previous one (reach -> ready needs a 2hr buffer, then strictly-after
