@@ -17,6 +17,7 @@ import Layout from '../../layouts/Layout.astro';
           <label class="form-label" for="password">Password</label>
           <input class="form-input" type="password" id="password" name="password" required />
         </div>
+        <p class="forgot-link"><a href="/account/forgot-password">Forgot password?</a></p>
         <p id="login-error" class="login-error" style="display:none;"></p>
         <button type="submit" class="btn-primary login-btn">Log in</button>
       </form>
@@ -42,6 +43,7 @@ import Layout from '../../layouts/Layout.astro';
   .login-btn { width: 100%; justify-content: center; }
   .login-error { font-size: 13px; color: var(--color-error); margin: -4px 0 12px; }
   .login-footer { font-size: 13px; color: var(--color-mute); text-align: center; margin: 20px 0 0; }
+  .forgot-link { font-size: 13px; text-align: right; margin: -8px 0 14px; }
 </style>
 
 <script>

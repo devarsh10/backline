@@ -39,6 +39,13 @@ export async function markCustomerEmailVerified(db: D1Database, email: string): 
     .run();
 }
 
+export async function updateCustomerPassword(db: D1Database, id: number, passwordHash: string): Promise<void> {
+  await db
+    .prepare(`UPDATE customers SET password_hash = ?, updated_at = datetime('now') WHERE id = ?`)
+    .bind(passwordHash, id)
+    .run();
+}
+
 export async function updateCustomerProfile(db: D1Database, id: number, name: string, phone: string | undefined): Promise<void> {
   await db
     .prepare(`UPDATE customers SET name = ?, phone = ?, updated_at = datetime('now') WHERE id = ?`)
@@ -74,6 +81,16 @@ export async function storeOtpCode(db: D1Database, email: string, code: string):
     )
     .bind(email, code, expiresAt)
     .run();
+}
+
+export async function checkOtpCode(db: D1Database, email: string, code: string): Promise<boolean> {
+  const row = await db
+    .prepare(`SELECT code, expires_at FROM email_otp_codes WHERE email = ?`)
+    .bind(email)
+    .first<{ code: string; expires_at: string }>();
+  if (!row) return false;
+  if (row.code !== code) return false;
+  return new Date(row.expires_at).getTime() >= Date.now();
 }
 
 export async function verifyOtpCode(db: D1Database, email: string, code: string): Promise<boolean> {

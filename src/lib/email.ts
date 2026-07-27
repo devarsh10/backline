@@ -43,6 +43,18 @@ export function otpEmailHtml(code: string): string {
   `;
 }
 
+export function passwordResetOtpHtml(code: string): string {
+  return `
+    <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+      <h2>Reset your password</h2>
+      <p>Your Backline India password reset code is:</p>
+      <p style="font-size: 28px; font-weight: 700; letter-spacing: 4px;">${code}</p>
+      <p>This code expires in 10 minutes. If you didn't request this, you can ignore this email — your password won't change.</p>
+      <p>— Backline India</p>
+    </div>
+  `;
+}
+
 function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
