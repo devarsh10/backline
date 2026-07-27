@@ -35,21 +35,6 @@ const bookedQuantities = rentalDates ? await getBookedQuantities(env.DB, rentalD
       <p class="body-lg hero-sub">
         Rent drum kits, cymbals, amplifiers, and digital pianos for concerts, events, and studios across Gujarat. Transparent pricing, no hidden costs.
       </p>
-      <div class="hero-dates-card">
-        <p class="hero-dates-label">When do you need equipment?</p>
-        <form id="hero-dates-form" class="hero-dates-form">
-          <div class="hero-dates-field">
-            <label for="hero-date-from">Start date</label>
-            <input type="date" id="hero-date-from" required />
-          </div>
-          <div class="hero-dates-field">
-            <label for="hero-date-to">End date</label>
-            <input type="date" id="hero-date-to" required />
-          </div>
-          <button type="submit" class="btn-primary hero-dates-submit">Browse Equipment</button>
-        </form>
-        <a href="/#categories" class="hero-dates-skip" id="hero-dates-skip">Skip — I'll pick dates at checkout →</a>
-      </div>
       <div class="hero-trust-row">
         <span class="hero-trust-item">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
@@ -193,6 +178,31 @@ const bookedQuantities = rentalDates ? await getBookedQuantities(env.DB, rentalD
       { heading: 'Payment & delivery', items: paymentFaq },
     ]}
   />
+
+  <!-- Rental dates prompt — shown once on arrival if dates aren't already set -->
+  <div class="dates-modal-backdrop" id="dates-modal-backdrop" hidden>
+    <div class="dates-modal" role="dialog" aria-modal="true" aria-labelledby="dates-modal-title">
+      <button type="button" class="dates-modal-close" id="dates-modal-close" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <p id="dates-modal-title" class="dates-modal-title">When do you need equipment?</p>
+      <p class="dates-modal-sub">See real availability for your event dates as you browse.</p>
+      <form id="dates-modal-form">
+        <div class="dates-modal-row">
+          <div class="dates-modal-field">
+            <label for="dm-date-from">Start date</label>
+            <input type="date" id="dm-date-from" required />
+          </div>
+          <div class="dates-modal-field">
+            <label for="dm-date-to">End date</label>
+            <input type="date" id="dm-date-to" required />
+          </div>
+        </div>
+        <button type="submit" class="btn-primary dates-modal-submit">Browse Equipment</button>
+      </form>
+      <button type="button" class="dates-modal-skip" id="dates-modal-skip">Skip — I'll pick dates at checkout</button>
+    </div>
+  </div>
 </Layout>
 
 <style>
@@ -223,7 +233,7 @@ const bookedQuantities = rentalDates ? await getBookedQuantities(env.DB, rentalD
   .hero-badge .caption-mono { color: rgba(255,255,255,0.70); }
   .hero-headline { max-width: 800px; margin: 0 0 20px 0; color: #fff; }
   .hero-sub { color: rgba(255,255,255,0.75); max-width: 560px; margin: 0 0 32px 0; }
-  .hero-cta-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 28px; }
+  .hero-cta-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 10px; }
   .hero-trust-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
   .hero-trust-item {
     display: inline-flex; align-items: center; gap: 7px;
@@ -240,21 +250,6 @@ const bookedQuantities = rentalDates ? await getBookedQuantities(env.DB, rentalD
   }
   .hero-cta-row .btn-secondary:hover { background-color: rgba(255,255,255,0.10); border-color: rgba(255,255,255,0.55); }
 
-  .hero-dates-card {
-    background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.20); border-radius: var(--radius-lg);
-    padding: 20px 24px; margin-bottom: 28px; backdrop-filter: blur(4px); max-width: 560px; width: 100%;
-  }
-  .hero-dates-label { color: #fff; font-size: 13px; font-weight: 600; margin: 0 0 12px; text-align: left; }
-  .hero-dates-form { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
-  .hero-dates-field { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 130px; text-align: left; }
-  .hero-dates-field label { font-size: 11px; color: rgba(255,255,255,0.70); }
-  .hero-dates-field input {
-    background-color: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.25); border-radius: var(--radius-sm);
-    color: #fff; font-size: 14px; font-family: var(--font-sans); height: 40px; padding: 0 10px; width: 100%; color-scheme: dark;
-  }
-  .hero-dates-submit { white-space: nowrap; }
-  .hero-dates-skip { display: block; margin-top: 10px; font-size: 12px; color: rgba(255,255,255,0.65); text-decoration: underline; }
-  .hero-dates-skip:hover { color: #fff; }
 
   /* Scroll hint arrow at the bottom of hero */
   .hero-scroll-hint {
@@ -337,20 +332,68 @@ const bookedQuantities = rentalDates ? await getBookedQuantities(env.DB, rentalD
     .section { padding: 56px 0; }
     .section-header { margin-bottom: 32px; }
   }
+
+  /* Rental dates prompt modal */
+  .dates-modal-backdrop {
+    position: fixed; inset: 0; z-index: 500;
+    background-color: rgba(0,0,0,0.55); backdrop-filter: blur(2px);
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .dates-modal {
+    position: relative; width: 100%; max-width: 420px;
+    background-color: var(--color-canvas); border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-lg); padding: 28px 24px 24px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+  }
+  .dates-modal-close {
+    position: absolute; top: 14px; right: 14px;
+    background: none; border: none; color: var(--color-mute); cursor: pointer; padding: 4px;
+  }
+  .dates-modal-close:hover { color: var(--color-ink); }
+  .dates-modal-title { font-size: 18px; font-weight: 700; color: var(--color-ink); margin: 0 0 6px; letter-spacing: -0.02em; }
+  .dates-modal-sub { font-size: 13px; color: var(--color-mute); margin: 0 0 20px; }
+  .dates-modal-row { display: flex; gap: 10px; margin-bottom: 18px; }
+  .dates-modal-field { display: flex; flex-direction: column; gap: 5px; flex: 1; }
+  .dates-modal-field label { font-size: 12px; color: var(--color-body); }
+  .dates-modal-field input {
+    background-color: var(--color-canvas); border: 1px solid var(--color-hairline); border-radius: var(--radius-sm);
+    color: var(--color-ink); font-size: 14px; font-family: var(--font-sans); height: 40px; padding: 0 10px; width: 100%;
+    color-scheme: dark;
+  }
+  .dates-modal-submit { width: 100%; justify-content: center; }
+  .dates-modal-skip {
+    display: block; width: 100%; text-align: center; margin-top: 14px;
+    background: none; border: none; font-size: 13px; color: var(--color-mute); text-decoration: underline; cursor: pointer;
+  }
+  .dates-modal-skip:hover { color: var(--color-body); }
 </style>
 
 <script>
   import { RENTAL_DATES_COOKIE } from '../lib/rentalDates';
 
-  const form = document.getElementById('hero-dates-form') as HTMLFormElement;
-  const dateFrom = document.getElementById('hero-date-from') as HTMLInputElement;
-  const dateTo = document.getElementById('hero-date-to') as HTMLInputElement;
-  const skipLink = document.getElementById('hero-dates-skip') as HTMLAnchorElement;
+  const DISMISSED_COOKIE = 'dates_prompt_dismissed';
+
+  function getCookie(name: string): string | undefined {
+    return document.cookie.split('; ').find(row => row.startsWith(`${name}=`))?.split('=')[1];
+  }
+
+  const backdrop = document.getElementById('dates-modal-backdrop')!;
+  const form = document.getElementById('dates-modal-form') as HTMLFormElement;
+  const dateFrom = document.getElementById('dm-date-from') as HTMLInputElement;
+  const dateTo = document.getElementById('dm-date-to') as HTMLInputElement;
+
+  function dismissModal() {
+    backdrop.hidden = true;
+    document.cookie = `${DISMISSED_COOKIE}=1; path=/; max-age=${60 * 60 * 24 * 90}; SameSite=Lax`;
+  }
+
+  if (!getCookie(RENTAL_DATES_COOKIE) && !getCookie(DISMISSED_COOKIE)) {
+    backdrop.hidden = false;
+  }
 
   const today = new Date().toISOString().slice(0, 10);
   dateFrom.min = today;
   dateTo.min = today;
-
   dateFrom.addEventListener('change', () => {
     if (!dateTo.value || dateTo.value < dateFrom.value) dateTo.value = dateFrom.value;
     dateTo.min = dateFrom.value;
@@ -363,7 +406,9 @@ const bookedQuantities = rentalDates ? await getBookedQuantities(env.DB, rentalD
     window.location.href = '/#categories';
   });
 
-  skipLink.addEventListener('click', () => {
-    document.cookie = `${RENTAL_DATES_COOKIE}=; path=/; max-age=0`;
+  document.getElementById('dates-modal-skip')!.addEventListener('click', dismissModal);
+  document.getElementById('dates-modal-close')!.addEventListener('click', dismissModal);
+  backdrop.addEventListener('click', (e) => {
+    if (e.target === backdrop) dismissModal();
   });
 </script>

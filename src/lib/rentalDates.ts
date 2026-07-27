@@ -20,6 +20,11 @@ export function remainingUnitsFor(totalUnits: number, slug: string, booked: Map<
   return Math.max(0, totalUnits - (booked.get(slug) ?? 0));
 }
 
+export function formatDateChip(dateStr: string): string {
+  const opts: Intl.DateTimeFormatOptions = { weekday: 'short', day: 'numeric', month: 'short' };
+  return new Date(`${dateStr}T00:00:00`).toLocaleDateString('en-IN', opts);
+}
+
 export function formatDateRangeShort(range: RentalDateRange): string {
   const opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' };
   const from = new Date(`${range.from}T00:00:00`).toLocaleDateString('en-IN', opts);

@@ -1,7 +1,7 @@
 ---
 import { env } from 'cloudflare:workers';
 import { getAllEquipment } from '../lib/equipmentDb';
-import { RENTAL_DATES_COOKIE, parseRentalDatesCookie, formatDateRangeShort } from '../lib/rentalDates';
+import { RENTAL_DATES_COOKIE, parseRentalDatesCookie, formatDateChip } from '../lib/rentalDates';
 
 const equipment = await getAllEquipment(env.DB);
 
@@ -83,10 +83,33 @@ const searchIndex = equipment.map(({ slug, name, brand, category, subcategory, p
 
       <!-- Rental dates pill -->
       <div class="nav-dates-group" id="nav-dates-group">
-        <button type="button" class="nav-dates-pill" id="nav-dates-trigger" aria-haspopup="true" aria-expanded="false">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          <span id="nav-dates-label">{rentalDates ? formatDateRangeShort(rentalDates) : 'Select dates'}</span>
-        </button>
+        <div class="nav-dates-pill">
+          <button type="button" class="nav-dates-trigger" id="nav-dates-trigger" aria-haspopup="true" aria-expanded="false">
+            {rentalDates ? (
+              <>
+                <span class="nav-date-seg">
+                  <span class="nav-date-seg-label">Start</span>
+                  <span class="nav-date-seg-value">{formatDateChip(rentalDates.from)}</span>
+                </span>
+                <span class="nav-date-divider"></span>
+                <span class="nav-date-seg">
+                  <span class="nav-date-seg-label">End</span>
+                  <span class="nav-date-seg-value">{formatDateChip(rentalDates.to)}</span>
+                </span>
+              </>
+            ) : (
+              <span class="nav-dates-simple">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <span class="nav-dates-simple-label">Select dates</span>
+              </span>
+            )}
+          </button>
+          {rentalDates && (
+            <button type="button" class="nav-dates-clear" id="nav-dates-clear" aria-label="Clear dates">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          )}
+        </div>
         <div class="nav-dates-menu" role="menu">
           <div class="nav-dates-menu-inner">
             <div class="nav-dates-field">
@@ -222,16 +245,39 @@ const searchIndex = equipment.map(({ slug, name, brand, category, subcategory, p
 
   .nav-cta-cluster { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-shrink: 0; }
 
-  /* Rental dates pill */
+  /* Rental dates pill — a single capsule (border/background/radius all on one
+     container), not separate chips, per the reference the user shared. */
   .nav-dates-group { position: relative; }
   .nav-dates-pill {
-    display: flex; align-items: center; gap: 6px;
-    background-color: var(--color-canvas-soft-2); border: 1px solid var(--color-hairline);
-    border-radius: var(--radius-full); padding: 6px 12px; cursor: pointer;
-    font-size: 12px; font-weight: 500; color: var(--color-body); font-family: var(--font-sans);
-    white-space: nowrap;
+    display: flex; align-items: stretch;
+    background-color: var(--color-accent-soft); border: 1px solid var(--color-accent-deep);
+    border-radius: var(--radius-full); overflow: hidden;
   }
-  .nav-dates-pill:hover { border-color: var(--color-hairline-strong); color: var(--color-ink); }
+  .nav-dates-pill:hover { background-color: var(--color-accent-deep); }
+  .nav-dates-pill:hover .nav-date-seg-label,
+  .nav-dates-pill:hover .nav-date-seg-value,
+  .nav-dates-pill:hover .nav-dates-simple,
+  .nav-dates-pill:hover .nav-dates-simple svg,
+  .nav-dates-pill:hover .nav-dates-clear { color: #fff; }
+  .nav-dates-pill:hover .nav-date-divider { background-color: rgba(255,255,255,0.5); }
+  .nav-dates-trigger {
+    display: flex; align-items: stretch;
+    background: none; border: none; padding: 0; cursor: pointer; font-family: var(--font-sans);
+  }
+  .nav-date-seg { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 0; padding: 5px 12px; white-space: nowrap; }
+  .nav-date-seg-label { font-size: 10px; color: var(--color-accent-deep); opacity: 0.75; line-height: 1.2; }
+  .nav-date-seg-value { font-size: 12px; font-weight: 600; color: var(--color-accent-deep); line-height: 1.2; }
+  .nav-date-divider { width: 1px; background-color: var(--color-accent-deep); opacity: 0.35; margin: 6px 0; }
+  .nav-dates-simple {
+    display: flex; align-items: center; gap: 6px; padding: 6px 14px;
+    font-size: 12px; font-weight: 600; color: var(--color-accent-deep); white-space: nowrap;
+  }
+  .nav-dates-simple svg { color: var(--color-accent-deep); }
+  .nav-dates-clear {
+    display: flex; align-items: center; justify-content: center;
+    background: none; border: none; border-left: 1px solid var(--color-accent-deep);
+    color: var(--color-accent-deep); cursor: pointer; padding: 0 10px;
+  }
   .nav-dates-menu {
     position: absolute; top: 100%; right: 0;
     padding-top: 8px;
@@ -373,7 +419,9 @@ const searchIndex = equipment.map(({ slug, name, brand, category, subcategory, p
     }
     .nav-search.open .nav-search-toggle { display: none; }
     .nav-search-results { width: 280px; right: -8px; }
-    .nav-dates-pill span { display: none; }
+    .nav-date-seg-label { display: none; }
+    .nav-date-seg { padding: 5px 8px; }
+    .nav-dates-simple-label { display: none; }
     .nav-dates-menu { right: -40px; }
   }
 </style>
@@ -434,6 +482,10 @@ const searchIndex = equipment.map(({ slug, name, brand, category, subcategory, p
   datesUpdateBtn?.addEventListener('click', () => {
     if (!datesFrom.value || !datesTo.value) return;
     document.cookie = `rental_dates=${datesFrom.value}_${datesTo.value}; path=/; max-age=${60 * 60 * 24 * 90}; SameSite=Lax`;
+    window.location.reload();
+  });
+  document.getElementById('nav-dates-clear')?.addEventListener('click', () => {
+    document.cookie = 'rental_dates=; path=/; max-age=0';
     window.location.reload();
   });
 
