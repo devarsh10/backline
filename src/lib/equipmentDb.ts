@@ -76,6 +76,10 @@ export async function updateEquipmentTotalUnits(db: D1Database, slug: string, to
     .run();
 }
 
+export async function deleteEquipmentItem(db: D1Database, slug: string): Promise<void> {
+  await db.prepare(`DELETE FROM equipment WHERE slug = ?`).bind(slug).run();
+}
+
 export async function updateEquipmentPrice(db: D1Database, slug: string, pricePerDay: number): Promise<void> {
   await db
     .prepare(`UPDATE equipment SET price_per_day = ?, updated_at = datetime('now') WHERE slug = ?`)

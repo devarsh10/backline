@@ -162,6 +162,12 @@ import { categories } from '../../data/equipment';
   .eq-save-status { font-size: 11px; color: var(--color-mute); }
   .eq-save-status.saved { color: var(--color-accent-deep); }
   .eq-save-status.error { color: var(--color-error); }
+  .eq-remove-btn {
+    align-self: flex-start; font-size: 11px; color: var(--color-mute); background: none; border: none;
+    cursor: pointer; padding: 2px 0; margin-top: 2px; text-decoration: underline;
+  }
+  .eq-remove-btn:hover { color: var(--color-error); }
+  .eq-remove-btn:disabled { cursor: not-allowed; opacity: 0.6; }
 </style>
 
 <script>
@@ -197,6 +203,7 @@ import { categories } from '../../data/equipment';
           </div>
         </div>
         <span class="eq-save-status" data-slug-status="${item.slug}"></span>
+        <button type="button" class="eq-remove-btn" data-slug="${item.slug}" data-name="${item.name.replace(/"/g, '&quot;')}">Remove item</button>
       </div>
     `).join('');
 
@@ -294,6 +301,36 @@ import { categories } from '../../data/equipment';
           await saveUnits(slug, valueEl, newUnits);
           stepper.querySelectorAll('button').forEach(b => (b as HTMLButtonElement).disabled = false);
         });
+      });
+    });
+
+    grid.querySelectorAll<HTMLButtonElement>('.eq-remove-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const slug = btn.dataset.slug!;
+        const name = btn.dataset.name!;
+        if (!confirm(`Remove "${name}"? This can't be undone.`)) return;
+
+        btn.disabled = true;
+        btn.textContent = 'Removing…';
+        try {
+          const res = await fetch('/api/admin/equipment/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ slug }),
+          });
+          const result = await res.json();
+          if (!res.ok || !result.ok) {
+            alert(result.error || 'Could not remove this item.');
+            btn.disabled = false;
+            btn.textContent = 'Remove item';
+            return;
+          }
+          btn.closest('.eq-card')!.remove();
+        } catch {
+          alert('Network error — please try again.');
+          btn.disabled = false;
+          btn.textContent = 'Remove item';
+        }
       });
     });
 
