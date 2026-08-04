@@ -1,6 +1,7 @@
 ---
 export const prerender = false;
 import Layout from '../../layouts/Layout.astro';
+import { categories } from '../../data/equipment';
 ---
 
 <Layout title="Equipment Stock" noIndex={true} manifest="/admin.webmanifest" webAppTitle="BL Admin">
@@ -9,8 +10,70 @@ import Layout from '../../layouts/Layout.astro';
       <a href="/admin/orders" class="admin-tab">Orders</a>
       <a href="/admin/equipment" class="admin-tab active">Equipment Stock</a>
     </div>
-    <h1 class="display-lg">Equipment Stock</h1>
-    <p class="page-sub">Set how many units of each item you actually own. Customers can never book more than this for the same dates.</p>
+    <div class="page-header-row">
+      <div>
+        <h1 class="display-lg">Equipment Stock</h1>
+        <p class="page-sub">Set how many units of each item you actually own, and adjust prices. Customers can never book more units than this for the same dates.</p>
+      </div>
+      <button type="button" class="btn-primary" id="add-item-toggle">+ Add New Item</button>
+    </div>
+
+    <script id="admin-categories-data" type="application/json" set:html={JSON.stringify(categories)} />
+
+    <div id="add-item-panel" class="add-item-panel" hidden>
+      <h2 class="add-item-title">Add New Item</h2>
+      <div class="add-item-grid">
+        <div class="form-group">
+          <label class="form-label" for="ai-name">Name *</label>
+          <input class="form-input" type="text" id="ai-name" placeholder="e.g. Roland KC-600 Stereo Mixing Keyboard Amp" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="ai-brand">Brand *</label>
+          <input class="form-input" type="text" id="ai-brand" placeholder="e.g. Roland" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="ai-category">Category *</label>
+          <select class="form-input" id="ai-category"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="ai-subcategory">Subcategory *</label>
+          <input class="form-input" type="text" id="ai-subcategory" placeholder="e.g. Keyboard Amplifiers & Cabinets" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="ai-price">Price per day (₹) *</label>
+          <input class="form-input" type="number" id="ai-price" min="1" placeholder="e.g. 1500" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="ai-min-days">Minimum rental days *</label>
+          <input class="form-input" type="number" id="ai-min-days" min="1" value="1" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="ai-units">Units owned *</label>
+          <input class="form-input" type="number" id="ai-units" min="0" value="1" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="ai-image">Image URL (optional)</label>
+          <input class="form-input" type="text" id="ai-image" placeholder="/images/equipment/..." />
+        </div>
+        <div class="form-group add-item-full">
+          <label class="form-label" for="ai-included">What's included (one per line)</label>
+          <textarea class="form-input" id="ai-included" rows="3" placeholder="Power cable&#10;Stand"></textarea>
+        </div>
+        <div class="form-group add-item-full">
+          <label class="form-label" for="ai-specs">Specs (one "Key: Value" per line)</label>
+          <textarea class="form-input" id="ai-specs" rows="3" placeholder="Power: 200W&#10;Type: Stereo mixing keyboard amp"></textarea>
+        </div>
+      </div>
+      <label class="add-item-featured">
+        <input type="checkbox" id="ai-featured" /> Show in "Featured" section on the homepage
+      </label>
+      <p id="add-item-error" class="add-item-error" hidden></p>
+      <div class="add-item-actions">
+        <button type="button" class="btn-primary" id="add-item-save">Save item</button>
+        <button type="button" class="btn-secondary" id="add-item-cancel">Cancel</button>
+      </div>
+    </div>
+
     <p id="equipment-loading" class="loading-note">Loading equipment…</p>
     <div id="equipment-grid" class="equipment-grid" style="display:none;"></div>
   </div>
@@ -26,6 +89,30 @@ import Layout from '../../layouts/Layout.astro';
   .admin-tab.active { color: var(--color-on-primary); background-color: var(--color-ink); border-color: var(--color-ink); }
   .page-sub { color: var(--color-mute); font-size: 14px; margin: 0 0 24px; max-width: 560px; }
   .loading-note { color: var(--color-mute); font-size: 14px; }
+
+  .page-header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+  .add-item-panel {
+    background-color: var(--color-canvas); border: 1px solid var(--color-hairline); border-radius: var(--radius-lg);
+    padding: 20px; margin: 20px 0; max-width: 720px;
+  }
+  .add-item-title { font-size: 15px; font-weight: 600; margin: 0 0 16px; }
+  .add-item-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .add-item-full { grid-column: 1 / -1; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 0; }
+  .form-label { font-size: 12px; font-weight: 500; color: var(--color-body); }
+  .form-input {
+    background-color: var(--color-canvas); border: 1px solid var(--color-hairline); border-radius: var(--radius-sm);
+    color: var(--color-ink); font-size: 14px; font-family: var(--font-sans); height: 38px; padding: 0 10px; width: 100%;
+  }
+  textarea.form-input { height: auto; padding: 8px 10px; resize: vertical; }
+  .form-input:focus { border-color: var(--color-ink); outline: none; }
+  .add-item-featured { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--color-body); margin-top: 14px; }
+  .add-item-error { font-size: 13px; color: var(--color-error); margin: 12px 0 0; }
+  .add-item-actions { display: flex; gap: 10px; margin-top: 18px; }
+  @media (max-width: 640px) {
+    .add-item-grid { grid-template-columns: 1fr; }
+  }
 </style>
 
 <style is:global>
@@ -40,7 +127,21 @@ import Layout from '../../layouts/Layout.astro';
   }
   .eq-name { font-size: 14px; font-weight: 600; color: var(--color-ink); margin: 0; }
   .eq-sub { font-size: 12px; color: var(--color-mute); margin: 0; }
-  .eq-price { font-size: 13px; color: var(--color-body); margin: 0; }
+  .eq-price-row { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+  .eq-price-edit {
+    display: flex; align-items: center; gap: 4px;
+    border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); padding: 0 8px;
+  }
+  .eq-price-currency { font-size: 13px; color: var(--color-mute); }
+  .eq-price-input {
+    width: 80px; height: 32px; border: none; background: none; color: var(--color-ink);
+    font-size: 14px; font-family: var(--font-sans);
+  }
+  .eq-price-input:focus { outline: none; }
+  .eq-price-save-btn {
+    font-size: 11px; font-weight: 600; color: var(--color-accent-deep); background: none; border: none; cursor: pointer;
+    padding: 4px 6px;
+  }
   .eq-units-row { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
   .eq-units-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-mute); }
   .eq-stepper {
@@ -78,8 +179,15 @@ import Layout from '../../layouts/Layout.astro';
     grid.innerHTML = data.equipment.map((item: any) => `
       <div class="eq-card">
         <p class="eq-name">${item.name}</p>
-        <p class="eq-sub">${item.brand} · ${item.subcategory}</p>
-        <p class="eq-price">₹${item.pricePerDay.toLocaleString('en-IN')}/day · ${item.available ? 'Available' : 'Unavailable'}</p>
+        <p class="eq-sub">${item.brand} · ${item.subcategory} · ${item.available ? 'Available' : 'Unavailable'}</p>
+        <div class="eq-price-row">
+          <label class="eq-units-label">Price per day</label>
+          <div class="eq-price-edit" data-slug="${item.slug}">
+            <span class="eq-price-currency">₹</span>
+            <input type="number" class="eq-price-input" min="1" value="${item.pricePerDay}" data-value="${item.pricePerDay}" />
+            <button type="button" class="eq-price-save-btn" hidden>Save</button>
+          </div>
+        </div>
         <div class="eq-units-row">
           <label class="eq-units-label">Units owned</label>
           <div class="eq-stepper" data-slug="${item.slug}">
@@ -123,6 +231,54 @@ import Layout from '../../layouts/Layout.astro';
       }
     }
 
+    async function savePrice(slug: string, input: HTMLInputElement, saveBtn: HTMLButtonElement, newPrice: number) {
+      const statusEl = grid.querySelector<HTMLSpanElement>(`[data-slug-status="${slug}"]`)!;
+      const previousValue = Number(input.dataset.value);
+
+      statusEl.textContent = 'Saving…';
+      statusEl.className = 'eq-save-status';
+      saveBtn.disabled = true;
+
+      try {
+        const res = await fetch('/api/admin/equipment/price', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ slug, price_per_day: newPrice }),
+        });
+        const result = await res.json();
+        if (!res.ok || !result.ok) {
+          statusEl.textContent = result.error || 'Could not save.';
+          statusEl.className = 'eq-save-status error';
+          input.value = String(previousValue);
+        } else {
+          input.dataset.value = String(newPrice);
+          statusEl.textContent = 'Saved';
+          statusEl.className = 'eq-save-status saved';
+          saveBtn.hidden = true;
+        }
+      } catch {
+        statusEl.textContent = 'Network error.';
+        statusEl.className = 'eq-save-status error';
+        input.value = String(previousValue);
+      }
+      saveBtn.disabled = false;
+    }
+
+    grid.querySelectorAll<HTMLDivElement>('.eq-price-edit').forEach((wrap) => {
+      const slug = wrap.dataset.slug!;
+      const input = wrap.querySelector<HTMLInputElement>('.eq-price-input')!;
+      const saveBtn = wrap.querySelector<HTMLButtonElement>('.eq-price-save-btn')!;
+
+      input.addEventListener('input', () => {
+        saveBtn.hidden = Number(input.value) === Number(input.dataset.value) || !input.value || Number(input.value) <= 0;
+      });
+      saveBtn.addEventListener('click', () => {
+        const newPrice = Number(input.value);
+        if (!Number.isInteger(newPrice) || newPrice <= 0) return;
+        savePrice(slug, input, saveBtn, newPrice);
+      });
+    });
+
     grid.querySelectorAll<HTMLDivElement>('.eq-stepper').forEach((stepper) => {
       const slug = stepper.dataset.slug!;
       const valueEl = stepper.querySelector<HTMLSpanElement>('.eq-stepper-value')!;
@@ -145,4 +301,103 @@ import Layout from '../../layouts/Layout.astro';
   }
 
   loadEquipment();
+
+  // Add new item
+  interface CategoryOption { slug: string; name: string; }
+  const categoryOptions: CategoryOption[] = JSON.parse(
+    document.getElementById('admin-categories-data')!.textContent!
+  );
+  const categorySelect = document.getElementById('ai-category') as HTMLSelectElement;
+  categorySelect.innerHTML = categoryOptions.map(c => `<option value="${c.slug}">${c.name}</option>`).join('');
+
+  const addItemToggle = document.getElementById('add-item-toggle') as HTMLButtonElement;
+  const addItemPanel = document.getElementById('add-item-panel') as HTMLDivElement;
+  const addItemError = document.getElementById('add-item-error') as HTMLParagraphElement;
+  const addItemSaveBtn = document.getElementById('add-item-save') as HTMLButtonElement;
+
+  function parseLines(text: string): string[] {
+    return text.split('\n').map(l => l.trim()).filter(Boolean);
+  }
+  function parseSpecs(text: string): Record<string, string> {
+    const specs: Record<string, string> = {};
+    for (const line of parseLines(text)) {
+      const [key, ...rest] = line.split(':');
+      if (key && rest.length) specs[key.trim()] = rest.join(':').trim();
+    }
+    return specs;
+  }
+  function resetAddItemForm() {
+    (document.getElementById('ai-name') as HTMLInputElement).value = '';
+    (document.getElementById('ai-brand') as HTMLInputElement).value = '';
+    (document.getElementById('ai-subcategory') as HTMLInputElement).value = '';
+    (document.getElementById('ai-price') as HTMLInputElement).value = '';
+    (document.getElementById('ai-min-days') as HTMLInputElement).value = '1';
+    (document.getElementById('ai-units') as HTMLInputElement).value = '1';
+    (document.getElementById('ai-image') as HTMLInputElement).value = '';
+    (document.getElementById('ai-included') as HTMLTextAreaElement).value = '';
+    (document.getElementById('ai-specs') as HTMLTextAreaElement).value = '';
+    (document.getElementById('ai-featured') as HTMLInputElement).checked = false;
+    addItemError.hidden = true;
+  }
+
+  addItemToggle.addEventListener('click', () => {
+    addItemPanel.hidden = !addItemPanel.hidden;
+    if (!addItemPanel.hidden) resetAddItemForm();
+  });
+  document.getElementById('add-item-cancel')!.addEventListener('click', () => {
+    addItemPanel.hidden = true;
+  });
+
+  addItemSaveBtn.addEventListener('click', async () => {
+    const name = (document.getElementById('ai-name') as HTMLInputElement).value.trim();
+    const brand = (document.getElementById('ai-brand') as HTMLInputElement).value.trim();
+    const category = categorySelect.value;
+    const subcategory = (document.getElementById('ai-subcategory') as HTMLInputElement).value.trim();
+    const pricePerDay = Number((document.getElementById('ai-price') as HTMLInputElement).value);
+    const minDays = Number((document.getElementById('ai-min-days') as HTMLInputElement).value);
+    const totalUnits = Number((document.getElementById('ai-units') as HTMLInputElement).value);
+    const image = (document.getElementById('ai-image') as HTMLInputElement).value.trim();
+    const included = parseLines((document.getElementById('ai-included') as HTMLTextAreaElement).value);
+    const specs = parseSpecs((document.getElementById('ai-specs') as HTMLTextAreaElement).value);
+    const featured = (document.getElementById('ai-featured') as HTMLInputElement).checked;
+
+    addItemError.hidden = true;
+    if (!name || !brand || !subcategory) {
+      addItemError.textContent = 'Name, brand, and subcategory are required.';
+      addItemError.hidden = false;
+      return;
+    }
+    if (!Number.isInteger(pricePerDay) || pricePerDay <= 0) {
+      addItemError.textContent = 'Enter a valid price per day.';
+      addItemError.hidden = false;
+      return;
+    }
+
+    addItemSaveBtn.disabled = true;
+    addItemSaveBtn.textContent = 'Saving…';
+    try {
+      const res = await fetch('/api/admin/equipment/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name, brand, category, subcategory, pricePerDay, minDays, totalUnits, included, specs, image, featured,
+        }),
+      });
+      const result = await res.json();
+      if (!res.ok || !result.ok) {
+        addItemError.textContent = result.error || 'Could not save this item.';
+        addItemError.hidden = false;
+      } else {
+        addItemPanel.hidden = true;
+        document.getElementById('equipment-loading')!.style.display = 'block';
+        document.getElementById('equipment-grid')!.style.display = 'none';
+        await loadEquipment();
+      }
+    } catch {
+      addItemError.textContent = 'Network error — please try again.';
+      addItemError.hidden = false;
+    }
+    addItemSaveBtn.disabled = false;
+    addItemSaveBtn.textContent = 'Save item';
+  });
 </script>

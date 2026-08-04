@@ -75,3 +75,50 @@ export async function updateEquipmentTotalUnits(db: D1Database, slug: string, to
     .bind(totalUnits, slug)
     .run();
 }
+
+export async function updateEquipmentPrice(db: D1Database, slug: string, pricePerDay: number): Promise<void> {
+  await db
+    .prepare(`UPDATE equipment SET price_per_day = ?, updated_at = datetime('now') WHERE slug = ?`)
+    .bind(pricePerDay, slug)
+    .run();
+}
+
+export interface NewEquipmentInput {
+  slug: string;
+  name: string;
+  brand: string;
+  category: string;
+  subcategory: string;
+  specs: Record<string, string>;
+  pricePerDay: number;
+  minDays: number;
+  included: string[];
+  totalUnits: number;
+  image?: string;
+  featured: boolean;
+}
+
+export async function createEquipmentItem(db: D1Database, item: NewEquipmentInput): Promise<void> {
+  await db
+    .prepare(
+      `INSERT INTO equipment (
+        slug, name, brand, category, subcategory, specs, price_per_day, min_days,
+        included, image, featured, total_units
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    )
+    .bind(
+      item.slug,
+      item.name,
+      item.brand,
+      item.category,
+      item.subcategory,
+      JSON.stringify(item.specs),
+      item.pricePerDay,
+      item.minDays,
+      JSON.stringify(item.included),
+      item.image ?? null,
+      item.featured ? 1 : 0,
+      item.totalUnits
+    )
+    .run();
+}
