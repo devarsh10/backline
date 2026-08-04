@@ -66,9 +66,10 @@ import Layout from '../layouts/Layout.astro';
             </div>
             <div class="trust-row">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              Refundable deposit
+              Refundable deposit<span class="deposit-marker">*</span>
             </div>
           </div>
+          <a href="/terms#refunds" class="trust-card-note"><span class="deposit-marker">*</span>Subject to our cancellation &amp; refund policy</a>
         </aside>
       </div>
     </div>
@@ -117,6 +118,9 @@ import Layout from '../layouts/Layout.astro';
   }
   .trust-row { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--color-mute); }
   .trust-row svg { color: var(--color-accent-deep); flex-shrink: 0; }
+  .trust-card-note { display: block; font-size: 11px; color: var(--color-mute); margin: 6px 2px 0; }
+  .trust-card-note:hover { color: var(--color-body); }
+  .deposit-marker { color: var(--color-link); font-weight: 600; }
 
   @media (max-width: 768px) {
     .cart-layout { grid-template-columns: 1fr; }

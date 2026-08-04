@@ -120,6 +120,17 @@ const rentalDates = parseRentalDatesCookie(Astro.cookies.get(RENTAL_DATES_COOKIE
           <p class="stage-warning"><strong>Stage must be ready to load equipment (carpets, flooring, etc. laid down) before our crew arrives</strong> — otherwise we won't be able to have the backline ready by the requested time.</p>
         </section>
 
+        <!-- Cancellation & Refunds -->
+        <section class="checkout-section" id="cancellation-policy">
+          <h2 class="section-title">Cancellation &amp; Refunds</h2>
+          <ul class="refund-policy-list">
+            <li>More than 48 hours before delivery: <strong>full refund</strong></li>
+            <li>24–48 hours before delivery: <strong>50% refund</strong></li>
+            <li>Less than 24 hours before delivery: <strong>no refund</strong></li>
+          </ul>
+          <a href="/terms#refunds" class="inline-link refund-policy-link">Read full cancellation policy →</a>
+        </section>
+
         <!-- Payment info -->
         <section class="payment-info-band">
           <div class="payment-info-inner">
@@ -134,7 +145,7 @@ const rentalDates = parseRentalDatesCookie(Astro.cookies.get(RENTAL_DATES_COOKIE
         <button type="button" class="btn-primary place-order-btn" id="place-order-btn">
           Pay & Place Order
         </button>
-        <p class="order-footnote">By placing an order you agree to our <a href="/terms" class="inline-link">terms of service</a>.</p>
+        <p class="order-footnote">By placing an order you agree to our <a href="/terms" class="inline-link">terms of service</a>, including our <a href="#cancellation-policy" class="inline-link">cancellation &amp; refund policy</a>.</p>
       </div>
 
       <!-- Right: order summary -->
@@ -217,6 +228,13 @@ const rentalDates = parseRentalDatesCookie(Astro.cookies.get(RENTAL_DATES_COOKIE
     background-color: var(--color-canvas-soft-2); border-radius: var(--radius-sm);
     padding: 12px 14px;
   }
+
+  .refund-policy-list {
+    margin: 0 0 10px; padding-left: 18px; display: flex; flex-direction: column; gap: 6px;
+    font-size: 13px; color: var(--color-body); line-height: 1.5;
+  }
+  .refund-policy-list strong { color: var(--color-ink); }
+  .refund-policy-link { font-size: 13px; }
 
   .dates-calc {
     display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
