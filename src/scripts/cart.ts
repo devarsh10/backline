@@ -91,16 +91,6 @@ export function formatPrice(amount: number): string {
   return `₹${amount.toLocaleString('en-IN')}`;
 }
 
-export function getDiscountForDays(days: number): number {
-  const tiers = [
-    { minDays: 7, discountPct: 10 },
-    { minDays: 3, discountPct: 5 },
-    { minDays: 2, discountPct: 2 },
-    { minDays: 1, discountPct: 0 },
-  ];
-  return tiers.find(t => days >= t.minDays)?.discountPct ?? 0;
-}
-
 export function generateOrderRef(): string {
   const now = new Date();
   const date = now.toISOString().slice(0, 10).replace(/-/g, '');

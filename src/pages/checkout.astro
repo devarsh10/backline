@@ -89,9 +89,10 @@ const rentalDates = parseRentalDatesCookie(Astro.cookies.get(RENTAL_DATES_COOKIE
         </section>
 
         <!-- Event logistics -->
-        <section class="checkout-section">
+        <section class="checkout-section" id="event-logistics-section">
           <h2 class="section-title">Event logistics</h2>
           <p class="section-sub">Helps our crew plan delivery, setup, and sound check timing.</p>
+          <p class="event-logistics-disabled-note" id="event-logistics-disabled-note" hidden>Not applicable for multi-day rentals — these details are for scheduling a single event day.</p>
           <div class="form-group">
             <label class="form-label" for="c-stage-dims">Stage dimensions *</label>
             <input class="form-input" type="text" id="c-stage-dims" name="stage_dimensions" placeholder="e.g. 20ft × 15ft" required autocomplete="off" />
@@ -106,7 +107,7 @@ const rentalDates = parseRentalDatesCookie(Astro.cookies.get(RENTAL_DATES_COOKIE
               <select class="form-input" id="c-ready-time" name="backline_ready_time"></select>
             </div>
           </div>
-          <p class="field-note">Setup takes a minimum of 2 hours once our crew reaches the venue — "ready by" options update automatically once you pick a reach time.</p>
+          <p class="field-note">Setup takes a minimum of 1.5 hours once our crew reaches the venue — "ready by" options update automatically once you pick a reach time.</p>
           <div class="form-row">
             <div class="form-group">
               <label class="form-label" for="c-soundcheck-time">Sound check start time</label>
@@ -195,6 +196,12 @@ const rentalDates = parseRentalDatesCookie(Astro.cookies.get(RENTAL_DATES_COOKIE
   }
   .section-title { font-size: 16px; font-weight: 600; color: var(--color-ink); letter-spacing: -0.02em; margin: 0 0 4px; }
   .section-sub { font-size: 13px; color: var(--color-mute); margin: 0 0 16px; }
+
+  .checkout-section--disabled { opacity: 0.45; pointer-events: none; }
+  .event-logistics-disabled-note {
+    font-size: 12px; color: var(--color-mute); background-color: var(--color-canvas-soft-2);
+    border-radius: var(--radius-sm); padding: 8px 12px; margin: -8px 0 16px;
+  }
 
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; min-width: 0; }
   .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 0; min-width: 0; }
@@ -318,8 +325,9 @@ const rentalDates = parseRentalDatesCookie(Astro.cookies.get(RENTAL_DATES_COOKIE
 <script>
   import {
     getCart, clearCart, saveLastOrder,
-    getCartSubtotalPerDay, getDiscountForDays, updateCartBadge
+    getCartSubtotalPerDay, updateCartBadge
   } from '../scripts/cart';
+  import { getDiscountForDays } from '../data/equipment';
 
   const cart = getCart();
 
@@ -471,17 +479,35 @@ const rentalDates = parseRentalDatesCookie(Astro.cookies.get(RENTAL_DATES_COOKIE
   const dateFrom = document.getElementById('date-from') as HTMLInputElement;
   const dateTo = document.getElementById('date-to') as HTMLInputElement;
 
+  // Event logistics only applies to a single-day event — for multi-day
+  // rentals there's no one "show day" to schedule reach/ready/soundcheck
+  // times for, so the section is disabled and not required.
+  const eventLogisticsSection = document.getElementById('event-logistics-section')!;
+  const eventLogisticsNote = document.getElementById('event-logistics-disabled-note') as HTMLElement;
+  const eventLogisticsInputs = eventLogisticsSection.querySelectorAll('input, select');
+  const stageDimsInput = document.getElementById('c-stage-dims') as HTMLInputElement;
+
+  function updateEventLogisticsState(days: number) {
+    const multiDay = days > 1;
+    eventLogisticsSection.classList.toggle('checkout-section--disabled', multiDay);
+    eventLogisticsNote.hidden = !multiDay;
+    eventLogisticsInputs.forEach(el => { (el as HTMLInputElement | HTMLSelectElement).disabled = multiDay; });
+    stageDimsInput.required = !multiDay;
+  }
+
   function recalc() {
     if (!dateFrom.value || !dateTo.value) {
       document.getElementById('dates-calc')!.style.display = 'none';
       document.getElementById('days-line')!.style.display = 'none';
       document.getElementById('discount-line')!.style.display = 'none';
       document.getElementById('summary-date-note')!.style.display = 'none';
+      updateEventLogisticsState(1);
       return;
     }
     const from = new Date(dateFrom.value);
     const to = new Date(dateTo.value);
     const days = Math.max(1, Math.round((to.getTime() - from.getTime()) / 86400000) + 1);
+    updateEventLogisticsState(days);
     const discountPct = getDiscountForDays(days);
     const discountAmt = Math.round(subtotalPerDay * days * discountPct / 100);
     const total = subtotalPerDay * days - discountAmt + transportationCharge;
@@ -581,7 +607,7 @@ const rentalDates = parseRentalDatesCookie(Astro.cookies.get(RENTAL_DATES_COOKIE
   const showEndSelect = document.getElementById('c-show-end-time') as HTMLSelectElement;
 
   function updateReadyOptions() {
-    const minInclusive = reachSelect.value ? timeToMinutes(reachSelect.value) + 120 : null;
+    const minInclusive = reachSelect.value ? timeToMinutes(reachSelect.value) + 90 : null;
     populateTimeSelect(readySelect, null, minInclusive);
     updateSoundcheckOptions();
   }
@@ -633,7 +659,8 @@ const rentalDates = parseRentalDatesCookie(Astro.cookies.get(RENTAL_DATES_COOKIE
       alert('Please fill in all required fields — including selecting your venue address from the suggestions list.');
       return;
     }
-    if (!stageDimensions) {
+    const days = Math.max(1, Math.round((new Date(toVal).getTime() - new Date(fromVal).getTime()) / 86400000) + 1);
+    if (days === 1 && !stageDimensions) {
       alert('Please fill in the stage dimensions.');
       return;
     }

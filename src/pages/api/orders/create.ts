@@ -55,8 +55,13 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   if (!customer?.name || !customer?.phone || !customer?.city) {
     return badRequest('Missing required customer details');
   }
-  if (!customer?.stageDimensions?.trim()) return badRequest('Stage dimensions are required');
   if (!dates?.from || !dates?.to) return badRequest('Missing rental dates');
+
+  // Event logistics (stage dimensions, reach/ready/soundcheck/show-end times) only
+  // applies to a single-day rental — multi-day bookings have no one "show day" to
+  // schedule against, so the checkout UI disables that section and it's optional here.
+  const rentalDays = Math.max(1, Math.round((new Date(dates.to).getTime() - new Date(dates.from).getTime()) / 86400000) + 1);
+  if (rentalDays === 1 && !customer?.stageDimensions?.trim()) return badRequest('Stage dimensions are required');
 
   // The order's email is always the logged-in account's email, never client-supplied,
   // so order history lookups stay trustworthy.

@@ -33,8 +33,7 @@ export interface Category {
 
 export const rentalDiscountTiers = [
   { minDays: 1, discountPct: 0 },
-  { minDays: 2, discountPct: 2 },
-  { minDays: 3, discountPct: 5 },
+  { minDays: 2, discountPct: 5 },
   { minDays: 7, discountPct: 10 },
 ];
 
