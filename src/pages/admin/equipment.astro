@@ -76,6 +76,62 @@ import { categories } from '../../data/equipment';
 
     <p id="equipment-loading" class="loading-note">Loading equipment…</p>
     <div id="equipment-grid" class="equipment-grid" style="display:none;"></div>
+
+    <!-- Edit item modal -->
+    <div class="edit-modal-backdrop" id="edit-modal-backdrop" hidden>
+      <div class="edit-modal" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title">
+        <button type="button" class="edit-modal-close" id="edit-modal-close" aria-label="Close">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <h2 id="edit-modal-title" class="add-item-title">Edit Item</h2>
+        <div class="add-item-grid">
+          <div class="form-group">
+            <label class="form-label" for="ei-name">Name *</label>
+            <input class="form-input" type="text" id="ei-name" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ei-brand">Brand *</label>
+            <input class="form-input" type="text" id="ei-brand" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ei-category">Category *</label>
+            <select class="form-input" id="ei-category"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ei-subcategory">Subcategory *</label>
+            <input class="form-input" type="text" id="ei-subcategory" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ei-price">Price per day (₹) *</label>
+            <input class="form-input" type="number" id="ei-price" min="1" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ei-min-days">Minimum rental days *</label>
+            <input class="form-input" type="number" id="ei-min-days" min="1" />
+          </div>
+          <div class="form-group add-item-full">
+            <label class="form-label" for="ei-image">Image URL (optional)</label>
+            <input class="form-input" type="text" id="ei-image" placeholder="/images/equipment/..." />
+          </div>
+          <div class="form-group add-item-full">
+            <label class="form-label" for="ei-included">What's included (one per line)</label>
+            <textarea class="form-input" id="ei-included" rows="3"></textarea>
+          </div>
+          <div class="form-group add-item-full">
+            <label class="form-label" for="ei-specs">Specs (one "Key: Value" per line)</label>
+            <textarea class="form-input" id="ei-specs" rows="3"></textarea>
+          </div>
+        </div>
+        <label class="add-item-featured">
+          <input type="checkbox" id="ei-featured" /> Show in "Featured" section on the homepage
+        </label>
+        <p id="edit-modal-error" class="add-item-error" hidden></p>
+        <div class="add-item-actions">
+          <button type="button" class="btn-primary" id="edit-modal-save">Save changes</button>
+          <button type="button" class="btn-secondary" id="edit-modal-cancel">Cancel</button>
+        </div>
+      </div>
+    </div>
   </div>
 </Layout>
 
@@ -113,6 +169,23 @@ import { categories } from '../../data/equipment';
   @media (max-width: 640px) {
     .add-item-grid { grid-template-columns: 1fr; }
   }
+
+  .edit-modal-backdrop {
+    position: fixed; inset: 0; z-index: 500;
+    background-color: rgba(0,0,0,0.55); backdrop-filter: blur(2px);
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .edit-modal {
+    position: relative; width: 100%; max-width: 640px; max-height: 90vh; overflow-y: auto;
+    background-color: var(--color-canvas); border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-lg); padding: 28px 24px 24px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+  }
+  .edit-modal-close {
+    position: absolute; top: 14px; right: 14px;
+    background: none; border: none; color: var(--color-mute); cursor: pointer; padding: 4px;
+  }
+  .edit-modal-close:hover { color: var(--color-ink); }
 </style>
 
 <style is:global>
@@ -125,23 +198,17 @@ import { categories } from '../../data/equipment';
     border-radius: var(--radius-lg); padding: 16px;
     display: flex; flex-direction: column; gap: 8px;
   }
+  .eq-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
   .eq-name { font-size: 14px; font-weight: 600; color: var(--color-ink); margin: 0; }
+  .eq-edit-btn {
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border: 1px solid var(--color-hairline); border-radius: var(--radius-sm);
+    background: none; color: var(--color-mute); cursor: pointer;
+  }
+  .eq-edit-btn:hover { color: var(--color-ink); border-color: var(--color-hairline-strong); }
   .eq-sub { font-size: 12px; color: var(--color-mute); margin: 0; }
-  .eq-price-row { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
-  .eq-price-edit {
-    display: flex; align-items: center; gap: 4px;
-    border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); padding: 0 8px;
-  }
-  .eq-price-currency { font-size: 13px; color: var(--color-mute); }
-  .eq-price-input {
-    width: 80px; height: 32px; border: none; background: none; color: var(--color-ink);
-    font-size: 14px; font-family: var(--font-sans);
-  }
-  .eq-price-input:focus { outline: none; }
-  .eq-price-save-btn {
-    font-size: 11px; font-weight: 600; color: var(--color-accent-deep); background: none; border: none; cursor: pointer;
-    padding: 4px 6px;
-  }
+  .eq-price-display { font-size: 15px; font-weight: 600; color: var(--color-ink); margin: 2px 0 0; }
+  .eq-price-unit { font-size: 12px; font-weight: 400; color: var(--color-mute); }
   .eq-units-row { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
   .eq-units-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-mute); }
   .eq-stepper {
@@ -171,6 +238,8 @@ import { categories } from '../../data/equipment';
 </style>
 
 <script>
+  let equipmentList: any[] = [];
+
   async function loadEquipment() {
     const res = await fetch('/api/admin/equipment');
     if (res.status === 401) {
@@ -179,21 +248,20 @@ import { categories } from '../../data/equipment';
     }
 
     const data = await res.json();
+    equipmentList = data.equipment;
     document.getElementById('equipment-loading')!.style.display = 'none';
 
     const grid = document.getElementById('equipment-grid')!;
     grid.innerHTML = data.equipment.map((item: any) => `
       <div class="eq-card">
-        <p class="eq-name">${item.name}</p>
-        <p class="eq-sub">${item.brand} · ${item.subcategory} · ${item.available ? 'Available' : 'Unavailable'}</p>
-        <div class="eq-price-row">
-          <label class="eq-units-label">Price per day</label>
-          <div class="eq-price-edit" data-slug="${item.slug}">
-            <span class="eq-price-currency">₹</span>
-            <input type="number" class="eq-price-input" min="1" value="${item.pricePerDay}" data-value="${item.pricePerDay}" />
-            <button type="button" class="eq-price-save-btn" hidden>Save</button>
-          </div>
+        <div class="eq-card-header">
+          <p class="eq-name">${item.name}</p>
+          <button type="button" class="eq-edit-btn" data-slug="${item.slug}" aria-label="Edit item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+          </button>
         </div>
+        <p class="eq-sub">${item.brand} · ${item.subcategory} · ${item.available ? 'Available' : 'Unavailable'}</p>
+        <p class="eq-price-display">₹${item.pricePerDay.toLocaleString('en-IN')}<span class="eq-price-unit">/day</span></p>
         <div class="eq-units-row">
           <label class="eq-units-label">Units owned</label>
           <div class="eq-stepper" data-slug="${item.slug}">
@@ -238,52 +306,8 @@ import { categories } from '../../data/equipment';
       }
     }
 
-    async function savePrice(slug: string, input: HTMLInputElement, saveBtn: HTMLButtonElement, newPrice: number) {
-      const statusEl = grid.querySelector<HTMLSpanElement>(`[data-slug-status="${slug}"]`)!;
-      const previousValue = Number(input.dataset.value);
-
-      statusEl.textContent = 'Saving…';
-      statusEl.className = 'eq-save-status';
-      saveBtn.disabled = true;
-
-      try {
-        const res = await fetch('/api/admin/equipment/price', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ slug, price_per_day: newPrice }),
-        });
-        const result = await res.json();
-        if (!res.ok || !result.ok) {
-          statusEl.textContent = result.error || 'Could not save.';
-          statusEl.className = 'eq-save-status error';
-          input.value = String(previousValue);
-        } else {
-          input.dataset.value = String(newPrice);
-          statusEl.textContent = 'Saved';
-          statusEl.className = 'eq-save-status saved';
-          saveBtn.hidden = true;
-        }
-      } catch {
-        statusEl.textContent = 'Network error.';
-        statusEl.className = 'eq-save-status error';
-        input.value = String(previousValue);
-      }
-      saveBtn.disabled = false;
-    }
-
-    grid.querySelectorAll<HTMLDivElement>('.eq-price-edit').forEach((wrap) => {
-      const slug = wrap.dataset.slug!;
-      const input = wrap.querySelector<HTMLInputElement>('.eq-price-input')!;
-      const saveBtn = wrap.querySelector<HTMLButtonElement>('.eq-price-save-btn')!;
-
-      input.addEventListener('input', () => {
-        saveBtn.hidden = Number(input.value) === Number(input.dataset.value) || !input.value || Number(input.value) <= 0;
-      });
-      saveBtn.addEventListener('click', () => {
-        const newPrice = Number(input.value);
-        if (!Number.isInteger(newPrice) || newPrice <= 0) return;
-        savePrice(slug, input, saveBtn, newPrice);
-      });
+    grid.querySelectorAll<HTMLButtonElement>('.eq-edit-btn').forEach((btn) => {
+      btn.addEventListener('click', () => openEditModal(btn.dataset.slug!));
     });
 
     grid.querySelectorAll<HTMLDivElement>('.eq-stepper').forEach((stepper) => {
@@ -436,5 +460,96 @@ import { categories } from '../../data/equipment';
     }
     addItemSaveBtn.disabled = false;
     addItemSaveBtn.textContent = 'Save item';
+  });
+
+  // Edit item modal
+  const editBackdrop = document.getElementById('edit-modal-backdrop') as HTMLDivElement;
+  const editCategorySelect = document.getElementById('ei-category') as HTMLSelectElement;
+  editCategorySelect.innerHTML = categoryOptions.map(c => `<option value="${c.slug}">${c.name}</option>`).join('');
+  const editError = document.getElementById('edit-modal-error') as HTMLParagraphElement;
+  const editSaveBtn = document.getElementById('edit-modal-save') as HTMLButtonElement;
+  let editingSlug = '';
+
+  function openEditModal(slug: string) {
+    const item = equipmentList.find((i) => i.slug === slug);
+    if (!item) return;
+    editingSlug = slug;
+
+    (document.getElementById('ei-name') as HTMLInputElement).value = item.name;
+    (document.getElementById('ei-brand') as HTMLInputElement).value = item.brand;
+    editCategorySelect.value = item.category;
+    (document.getElementById('ei-subcategory') as HTMLInputElement).value = item.subcategory;
+    (document.getElementById('ei-price') as HTMLInputElement).value = String(item.pricePerDay);
+    (document.getElementById('ei-min-days') as HTMLInputElement).value = String(item.minDays);
+    (document.getElementById('ei-image') as HTMLInputElement).value = item.image ?? '';
+    (document.getElementById('ei-included') as HTMLTextAreaElement).value = (item.included ?? []).join('\n');
+    (document.getElementById('ei-specs') as HTMLTextAreaElement).value = Object.entries(item.specs ?? {})
+      .map(([k, v]) => `${k}: ${v}`).join('\n');
+    (document.getElementById('ei-featured') as HTMLInputElement).checked = Boolean(item.featured);
+    editError.hidden = true;
+
+    editBackdrop.hidden = false;
+  }
+  function closeEditModal() {
+    editBackdrop.hidden = true;
+    editingSlug = '';
+  }
+
+  document.getElementById('edit-modal-close')!.addEventListener('click', closeEditModal);
+  document.getElementById('edit-modal-cancel')!.addEventListener('click', closeEditModal);
+  editBackdrop.addEventListener('click', (e) => {
+    if (e.target === editBackdrop) closeEditModal();
+  });
+
+  editSaveBtn.addEventListener('click', async () => {
+    const name = (document.getElementById('ei-name') as HTMLInputElement).value.trim();
+    const brand = (document.getElementById('ei-brand') as HTMLInputElement).value.trim();
+    const category = editCategorySelect.value;
+    const subcategory = (document.getElementById('ei-subcategory') as HTMLInputElement).value.trim();
+    const pricePerDay = Number((document.getElementById('ei-price') as HTMLInputElement).value);
+    const minDays = Number((document.getElementById('ei-min-days') as HTMLInputElement).value);
+    const image = (document.getElementById('ei-image') as HTMLInputElement).value.trim();
+    const included = parseLines((document.getElementById('ei-included') as HTMLTextAreaElement).value);
+    const specs = parseSpecs((document.getElementById('ei-specs') as HTMLTextAreaElement).value);
+    const featured = (document.getElementById('ei-featured') as HTMLInputElement).checked;
+
+    editError.hidden = true;
+    if (!name || !brand || !subcategory) {
+      editError.textContent = 'Name, brand, and subcategory are required.';
+      editError.hidden = false;
+      return;
+    }
+    if (!Number.isInteger(pricePerDay) || pricePerDay <= 0) {
+      editError.textContent = 'Enter a valid price per day.';
+      editError.hidden = false;
+      return;
+    }
+
+    editSaveBtn.disabled = true;
+    editSaveBtn.textContent = 'Saving…';
+    try {
+      const res = await fetch('/api/admin/equipment/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slug: editingSlug, name, brand, category, subcategory, pricePerDay, minDays, included, specs, image, featured,
+        }),
+      });
+      const result = await res.json();
+      if (!res.ok || !result.ok) {
+        editError.textContent = result.error || 'Could not save this item.';
+        editError.hidden = false;
+      } else {
+        closeEditModal();
+        document.getElementById('equipment-loading')!.style.display = 'block';
+        document.getElementById('equipment-grid')!.style.display = 'none';
+        await loadEquipment();
+      }
+    } catch {
+      editError.textContent = 'Network error — please try again.';
+      editError.hidden = false;
+    }
+    editSaveBtn.disabled = false;
+    editSaveBtn.textContent = 'Save changes';
   });
 </script>

@@ -481,7 +481,7 @@ const searchIndex = equipment.map(({ slug, name, brand, category, subcategory, p
   });
   datesUpdateBtn?.addEventListener('click', () => {
     if (!datesFrom.value || !datesTo.value) return;
-    document.cookie = `rental_dates=${datesFrom.value}_${datesTo.value}; path=/; max-age=${60 * 60 * 24 * 90}; SameSite=Lax`;
+    document.cookie = `rental_dates=${datesFrom.value}_${datesTo.value}; path=/; SameSite=Lax`;
     window.location.reload();
   });
   document.getElementById('nav-dates-clear')?.addEventListener('click', () => {

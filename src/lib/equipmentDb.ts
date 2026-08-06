@@ -102,6 +102,43 @@ export interface NewEquipmentInput {
   featured: boolean;
 }
 
+export interface EquipmentUpdateInput {
+  name: string;
+  brand: string;
+  category: string;
+  subcategory: string;
+  specs: Record<string, string>;
+  pricePerDay: number;
+  minDays: number;
+  included: string[];
+  image?: string;
+  featured: boolean;
+}
+
+export async function updateEquipmentItem(db: D1Database, slug: string, item: EquipmentUpdateInput): Promise<void> {
+  await db
+    .prepare(
+      `UPDATE equipment SET
+        name = ?, brand = ?, category = ?, subcategory = ?, specs = ?, price_per_day = ?,
+        min_days = ?, included = ?, image = ?, featured = ?, updated_at = datetime('now')
+      WHERE slug = ?`
+    )
+    .bind(
+      item.name,
+      item.brand,
+      item.category,
+      item.subcategory,
+      JSON.stringify(item.specs),
+      item.pricePerDay,
+      item.minDays,
+      JSON.stringify(item.included),
+      item.image ?? null,
+      item.featured ? 1 : 0,
+      slug
+    )
+    .run();
+}
+
 export async function createEquipmentItem(db: D1Database, item: NewEquipmentInput): Promise<void> {
   await db
     .prepare(

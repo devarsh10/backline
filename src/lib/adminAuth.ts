@@ -1,4 +1,8 @@
-const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+// Short backstop TTL, not the primary expiry mechanism — the cookie itself
+// is session-only (see login.ts). This just caps how long a token stays
+// valid if a browser's "restore previous session" feature keeps the cookie
+// alive across a restart.
+const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
 
 async function hmac(secret: string, message: string): Promise<string> {
   const key = await crypto.subtle.importKey(
