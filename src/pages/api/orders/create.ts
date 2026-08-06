@@ -13,6 +13,7 @@ import { getEquipmentBySlug } from '../../../lib/equipmentDb';
 import { verifyCustomerSessionToken } from '../../../lib/customerAuth';
 import { getCustomerById } from '../../../lib/customerDb';
 import { getTransportationCharge, DistanceError } from '../../../lib/distance';
+import { isValidGstinFormat } from '../../../lib/gstin';
 
 export const prerender = false;
 
@@ -62,6 +63,10 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   // schedule against, so the checkout UI disables that section and it's optional here.
   const rentalDays = Math.max(1, Math.round((new Date(dates.to).getTime() - new Date(dates.from).getTime()) / 86400000) + 1);
   if (rentalDays === 1 && !customer?.stageDimensions?.trim()) return badRequest('Stage dimensions are required');
+
+  if (customer?.gstin && !isValidGstinFormat(customer.gstin)) {
+    return badRequest('That GSTIN does not look valid');
+  }
 
   // The order's email is always the logged-in account's email, never client-supplied,
   // so order history lookups stay trustworthy.

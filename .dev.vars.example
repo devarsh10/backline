@@ -17,3 +17,7 @@ CUSTOMER_SESSION_SECRET=change-me-too-please
 # local (http://localhost:4321) and production (https://backlineindia.com).
 GOOGLE_OAUTH_CLIENT_ID=xxxxxxxxxxxx.apps.googleusercontent.com
 GOOGLE_OAUTH_CLIENT_SECRET=xxxxxxxxxxxxxxxxxxxxxxxx
+
+# GSTIN lookup key from gstincheck.co.in (checkout's optional "Do you have a
+# GST number?" field, resolves a customer's GSTIN to their registered company name).
+GST_AUTO_FETCH=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx

@@ -86,6 +86,18 @@ const rentalDates = parseRentalDatesCookie(Astro.cookies.get(RENTAL_DATES_COOKIE
             <label class="form-label" for="c-notes">Additional notes</label>
             <textarea class="form-input form-textarea" id="c-notes" name="notes" rows="3" placeholder="Access instructions, parking, anything else we should know…"></textarea>
           </div>
+
+          <label class="gst-toggle">
+            <input type="checkbox" id="c-has-gst" /> Do you have a GST number?
+          </label>
+          <div class="form-group gst-field-group" id="gst-field-group" hidden>
+            <label class="form-label" for="c-gstin">GST number</label>
+            <div class="gstin-verify-row">
+              <input class="form-input" type="text" id="c-gstin" placeholder="e.g. 27AABCU9603R1ZN" maxlength="15" autocomplete="off" />
+              <button type="button" class="btn-secondary gstin-verify-btn" id="c-gstin-verify">Verify</button>
+            </div>
+            <p class="gstin-result" id="gstin-result" hidden></p>
+          </div>
         </section>
 
         <!-- Event logistics -->
@@ -229,6 +241,15 @@ const rentalDates = parseRentalDatesCookie(Astro.cookies.get(RENTAL_DATES_COOKIE
   .form-input[type="date"], .form-input[type="time"] { color-scheme: dark; }
 
   .field-note { font-size: 12px; color: var(--color-mute); margin: 6px 0 14px; line-height: 1.5; }
+
+  .gst-toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--color-body); margin-top: 4px; cursor: pointer; }
+  .gst-field-group { margin-top: 12px; }
+  .gstin-verify-row { display: flex; gap: 8px; }
+  .gstin-verify-row .form-input { flex: 1; min-width: 0; text-transform: uppercase; }
+  .gstin-verify-btn { white-space: nowrap; }
+  .gstin-result { font-size: 13px; margin: 8px 0 0; }
+  .gstin-result.ok { color: var(--color-accent-deep); }
+  .gstin-result.error { color: var(--color-error); }
 
   .stage-warning {
     font-size: 13px; color: var(--color-ink); line-height: 1.6; margin: 4px 0 0;
@@ -422,6 +443,72 @@ const rentalDates = parseRentalDatesCookie(Astro.cookies.get(RENTAL_DATES_COOKIE
       // Leave city/venue blank; transportation charge will be confirmed separately.
     }
   }
+
+  // GST number (optional) — the checkbox reveals the field; verifying looks up
+  // the registered company name so the customer can confirm before it's saved.
+  const hasGstCheckbox = document.getElementById('c-has-gst') as HTMLInputElement;
+  const gstFieldGroup = document.getElementById('gst-field-group') as HTMLDivElement;
+  const gstinInput = document.getElementById('c-gstin') as HTMLInputElement;
+  const gstinVerifyBtn = document.getElementById('c-gstin-verify') as HTMLButtonElement;
+  const gstinResult = document.getElementById('gstin-result') as HTMLParagraphElement;
+  let verifiedGstin = '';
+  let verifiedGstLegalName = '';
+
+  function resetGstinVerification() {
+    verifiedGstin = '';
+    verifiedGstLegalName = '';
+    gstinResult.hidden = true;
+  }
+
+  hasGstCheckbox.addEventListener('change', () => {
+    gstFieldGroup.hidden = !hasGstCheckbox.checked;
+    if (!hasGstCheckbox.checked) {
+      gstinInput.value = '';
+      resetGstinVerification();
+    }
+  });
+
+  gstinInput.addEventListener('input', () => {
+    gstinInput.value = gstinInput.value.toUpperCase();
+    resetGstinVerification();
+  });
+
+  gstinVerifyBtn.addEventListener('click', async () => {
+    const gstin = gstinInput.value.trim();
+    if (!gstin) return;
+
+    gstinVerifyBtn.disabled = true;
+    gstinVerifyBtn.textContent = 'Verifying…';
+    gstinResult.hidden = true;
+
+    try {
+      const res = await fetch('/api/checkout/gstin-lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gstin }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        resetGstinVerification();
+        gstinResult.textContent = data.error || 'Could not verify this GSTIN.';
+        gstinResult.className = 'gstin-result error';
+        gstinResult.hidden = false;
+      } else {
+        verifiedGstin = data.gstin;
+        verifiedGstLegalName = data.legalName;
+        gstinResult.textContent = `✓ ${data.legalName} (${data.status})`;
+        gstinResult.className = 'gstin-result ok';
+        gstinResult.hidden = false;
+      }
+    } catch {
+      resetGstinVerification();
+      gstinResult.textContent = 'Network error — please try again.';
+      gstinResult.className = 'gstin-result error';
+      gstinResult.hidden = false;
+    }
+    gstinVerifyBtn.disabled = false;
+    gstinVerifyBtn.textContent = 'Verify';
+  });
 
   // Live transportation quote
   let transportationCharge = 0;
@@ -664,6 +751,10 @@ const rentalDates = parseRentalDatesCookie(Astro.cookies.get(RENTAL_DATES_COOKIE
       alert('Please fill in the stage dimensions.');
       return;
     }
+    if (hasGstCheckbox.checked && !verifiedGstin) {
+      alert('Please verify your GST number, or uncheck "Do you have a GST number?" to continue without one.');
+      return;
+    }
 
     const btn = document.getElementById('place-order-btn') as HTMLButtonElement;
     btn.disabled = true;
@@ -690,6 +781,8 @@ const rentalDates = parseRentalDatesCookie(Astro.cookies.get(RENTAL_DATES_COOKIE
           customer: {
             name, phone, email, city, venue, notes,
             stageDimensions, venueReachTime, backlineReadyTime, soundcheckTime, showEndTime,
+            gstin: verifiedGstin || undefined,
+            gstLegalName: verifiedGstLegalName || undefined,
           },
           dates: { from: fromVal, to: toVal },
         }),

@@ -12,6 +12,8 @@ export interface OrderCustomer {
   backlineReadyTime?: string;
   soundcheckTime?: string;
   showEndTime?: string;
+  gstin?: string;
+  gstLegalName?: string;
 }
 
 export function generateOrderRef(): string {
@@ -34,9 +36,10 @@ export async function insertOrder(
       `INSERT INTO orders (
         order_ref, customer_id, customer_name, customer_phone, customer_email, city, venue, notes,
         stage_dimensions, venue_reach_time, backline_ready_time, soundcheck_time, show_end_time,
+        customer_gstin, customer_gst_legal_name,
         rental_start_date, rental_end_date, rental_days, items_json,
         subtotal_per_day, discount_pct, discount_amount, transportation_charge, total_amount
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .bind(
       orderRef,
@@ -52,6 +55,8 @@ export async function insertOrder(
       customer.backlineReadyTime ?? null,
       customer.soundcheckTime ?? null,
       customer.showEndTime ?? null,
+      customer.gstin ?? null,
+      customer.gstLegalName ?? null,
       fromDate,
       toDate,
       pricing.days,
