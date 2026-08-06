@@ -18,7 +18,7 @@ const LAST_ORDER_KEY = 'backline_last_order';
 
 export function getCart(): CartItem[] {
   try {
-    const stored = sessionStorage.getItem(CART_KEY);
+    const stored = localStorage.getItem(CART_KEY);
     return stored ? JSON.parse(stored) : [];
   } catch {
     return [];
@@ -26,7 +26,7 @@ export function getCart(): CartItem[] {
 }
 
 function saveCart(items: CartItem[]): void {
-  sessionStorage.setItem(CART_KEY, JSON.stringify(items));
+  localStorage.setItem(CART_KEY, JSON.stringify(items));
   updateCartBadge();
 }
 
@@ -54,7 +54,7 @@ export function updateQty(slug: string, qty: number): void {
 }
 
 export function clearCart(): void {
-  sessionStorage.removeItem(CART_KEY);
+  localStorage.removeItem(CART_KEY);
   updateCartBadge();
 }
 
@@ -75,12 +75,12 @@ export function updateCartBadge(): void {
 }
 
 export function saveLastOrder(order: object): void {
-  sessionStorage.setItem(LAST_ORDER_KEY, JSON.stringify(order));
+  localStorage.setItem(LAST_ORDER_KEY, JSON.stringify(order));
 }
 
 export function getLastOrder(): Record<string, unknown> | null {
   try {
-    const stored = sessionStorage.getItem(LAST_ORDER_KEY);
+    const stored = localStorage.getItem(LAST_ORDER_KEY);
     return stored ? JSON.parse(stored) : null;
   } catch {
     return null;

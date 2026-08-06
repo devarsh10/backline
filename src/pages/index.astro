@@ -387,7 +387,7 @@ const bookedQuantities = rentalDates ? await getBookedQuantities(env.DB, rentalD
 
   function dismissModal() {
     backdrop.hidden = true;
-    document.cookie = `${DISMISSED_COOKIE}=1; path=/; SameSite=Lax`;
+    document.cookie = `${DISMISSED_COOKIE}=1; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
   }
 
   if (!getCookie(RENTAL_DATES_COOKIE) && !getCookie(DISMISSED_COOKIE)) {
@@ -405,7 +405,7 @@ const bookedQuantities = rentalDates ? await getBookedQuantities(env.DB, rentalD
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     if (!dateFrom.value || !dateTo.value) return;
-    document.cookie = `${RENTAL_DATES_COOKIE}=${dateFrom.value}_${dateTo.value}; path=/; SameSite=Lax`;
+    document.cookie = `${RENTAL_DATES_COOKIE}=${dateFrom.value}_${dateTo.value}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
     window.location.href = '/#categories';
   });
 
